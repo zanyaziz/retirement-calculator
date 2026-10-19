@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Wealth Ladder Is an Escalator Moving at 5.5% a Year. Stand Still and You Slide.</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 700px; margin: 40px auto; padding: 0 20px; color: #242424; line-height: 1.65; font-size: 19px; }
+h1 { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; font-size: 34px; line-height: 1.25; }
+h2 { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; font-size: 25px; margin-top: 40px; }
+img { border: 1px solid #e6e6e6; border-radius: 8px; }
+a { color: #1a8917; }
+</style></head>
+<body>
+<h1>The Wealth Ladder Is an Escalator Moving at 5.5% a Year. Stand Still and You Slide.</h1>
+<p>A few days ago I <a href="https://medium.com/@zanyaziz/what-curiosity-about-my-net-worth-taught-me-about-luck-markets-how-to-get-richer-b14f50b7f405">published what 36 years of Federal Reserve data say</a> about the net worth ladder — how the bar for the top 10%, top 5%, and top 1% has risen at almost exactly the same speed for three and a half decades.</p>
+<p>The most common reaction wasn't about the data. It was a question: <strong>"OK — so where do <em>I</em> stand? And what would it take to climb?"</strong></p>
+<p>So I built a calculator that answers it. It's free, it runs entirely in your browser (your numbers never leave your device — there's no server and no account), and it does three things:</p>
+<ol>
+<li><strong>Tab 1</strong> tells you your percentile today — and how long the climb to the next rung takes.</li>
+<li><strong>Tab 2</strong> runs that climb thousands of times through messy, realistic markets and tells you your odds.</li>
+<li><strong>Tab 3</strong> answers the retirement question directly: if you stop working in X years, how long does the money last?</li>
+</ol>
+<p>Here's how to use each tab — and the handful of insights that surprised me while building it.</p>
+<h2>First, the one idea everything hangs on</h2>
+<p>The ladder is not standing still. From 1989 to 2025, the bar for the top 10% grew at 5.52% a year; the top 5% and top 1% bars grew at 5.59% a year (Federal Reserve Survey of Consumer Finances, via DQYDJ). Inflation-adjusted, that's roughly 2.8% a year.</p>
+<p>Which means: <strong>if your net worth grows slower than about 5.5% a year, you are sliding down the ladder even while your balance goes up.</strong> You can get richer every year and still fall behind in rank — because rank is relative, and everyone else's bar is compounding too.</p>
+<p>Hold onto that. Every tab below is really about the race between <em>your</em> growth and <em>the bar's</em> growth.</p>
+<h2>Tab 1 — Your percentile today</h2>
+<p><img alt="Tab 1 — the input sections, filled in for the example household, including the &quot;where a year of income goes&quot; breakdown" src="tab1-form.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">Tab 1 — the input sections, filled in for the example household, including the &quot;where a year of income goes&quot; breakdown</p>
+<p>Work down the six short sections:</p>
+<ol>
+<li><strong>Income → savings.</strong> Salary, bonus, and stock compensation, your effective tax rate, and your annual expenses. The tool does the one subtraction that matters: income after tax, minus spending, equals what you actually keep each year. (If you already know your savings, there's an "…or enter savings directly" shortcut.)</li>
+<li><strong>Cash &amp; other assets.</strong> Checking, savings, money market — plus anything else of real value.</li>
+<li><strong>Properties.</strong> Each property's value and mortgage. Tag one of them <strong>Primary home</strong> — Tab 3 needs to know which home is <em>your home</em>, for reasons I'll explain below.</li>
+<li><strong>Brokerage &amp; retirement accounts.</strong> A total, or per-symbol detail if you want to see your concentration.</li>
+<li><strong>Other liabilities.</strong> Anything else you owe.</li>
+<li><strong>Assumptions.</strong> Your expected return on invested assets, property appreciation — and a "bar growth adjustment" slider, in case you think the ladder will speed up or slow down from its 36-year pace.</li>
+</ol>
+<p>There's no calculate button — it updates as you type. You get <strong>Your standing</strong>: your net worth, your percentile (interpolated smoothly between the Fed's published rungs, not rounded to the nearest one), what your net worth is made of, and <strong>the next rung</strong> — the milestone above you, the dollar bar for it, and <em>what it would take</em>: how many years to reach it at your current savings and returns, while the bar itself keeps rising.</p>
+<p><img alt="Your standing — $1,120,000, about the 80.5th percentile" src="tab1-standing.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">Your standing — $1,120,000, about the 80.5th percentile</p>
+<p>Our example household — $200,000 of income ($170k salary + $30k bonus), a 22% effective tax rate, $120,000 of spending, $40,000 of cash, a $650,000 home with $420,000 still owed, and $850,000 in a brokerage account — lands at <strong>$1,120,000 of net worth, about the 80.5th percentile</strong>. They save $36,000 a year, an 18% savings rate. Their next rung is the Top 15% (the 85th percentile, a $1.5 million bar today) — and at their current pace, with the bar rising as they climb, the tool says it takes <strong>24.1 years</strong> to get there.</p>
+<p><img alt="The ladder on a log scale — each dot is the bar for that bracket, and the line is you" src="tab1-ladder.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">The ladder on a log scale — each dot is the bar for that bracket, and the line is you</p>
+<p><img alt="The climb — your projected line against the rising Top 15% bar, crossing around 2050" src="tab1-inputs.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">The climb — your projected line against the rising Top 15% bar, crossing around 2050</p>
+<h3>What Tab 1 teaches</h3>
+<p><strong>Percentile points get more expensive as you climb.</strong> Here are the actual 2025 bars:</p>
+<ul>
+<li>50th percentile: $215,916</li>
+<li>80th: $1,084,972 — a gap of about $869,000 across 30 percentile points</li>
+<li>90th: $2,550,306</li>
+<li>95th: $4,907,372 — a gap of about $2.36 million across just 5 points</li>
+<li>99th: $16,463,320 — a gap of about $11.6 million across just 4 points</li>
+</ul>
+<p>The ladder isn't a staircase with equal steps. It's closer to exponential: each rung costs several times the last. That's why "moving up five percentiles" means something completely different at the median than it does at the top.</p>
+<p><strong>Early on, saving moves you. Later, returns do.</strong> When your portfolio is small, your annual savings dwarf your investment gains, so your savings rate is the engine. There's a crossover point — when a normal year's market gain on your portfolio exceeds everything you save that year — after which the portfolio does the heavy lifting and <em>time in</em> matters more than <em>amount in</em>. Tab 1's "what it would take" quietly shows you which side of that crossover you're on: if cutting the wait means saving more, you're before it. If it means earning more on what you have, you're after it.</p>
+<h2>Tab 2 — Monte Carlo: what are the odds?</h2>
+<p>Tab 1 assumes your return is the same every year. Real markets aren't like that, and the difference matters — so Tab 2 replays your plan through thousands of different market histories.</p>
+<p>Two settings: <strong>volatility</strong> (15% a year by default — roughly what a stock-heavy portfolio actually does; drag it from 5% to 30% to see how much it matters) and <strong>number of simulations</strong> (500 for a fast preview, 2,000 standard, 5,000 for the smoothest picture).</p>
+<p>You get three things:</p>
+<ul>
+<li><strong>Where you could land</strong> — bands built from <em>every</em> simulated path, year by year: the median path, and the spread around it. Not one forecast; the whole weather system.</li>
+<li><strong>Odds of ever reaching each rung</strong> — the share of simulations whose net worth reaches that rung's (rising) bar at any point within 10, 20, or 30 years.</li>
+<li><strong>Distribution at 30 years</strong> — where the paths end up, so you can see the bad tail as well as the good one.</li>
+</ul>
+<p><img alt="Monte Carlo results — median outcomes at 10, 20, and 30 years, and the odds of ever reaching each rung" src="tab2-landing.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">Monte Carlo results — median outcomes at 10, 20, and 30 years, and the odds of ever reaching each rung</p>
+<p>For our example household, the median simulated path reaches $2.15 million in 10 years, $3.78 million in 20, and $6.50 million in 30 — with a wide spread around it (at 30 years, the middle 80% of paths land between $2.9 million and $15.0 million). Their odds of <em>ever touching</em> the Top 10% bar: 2.9% within 10 years, 16.1% within 20, 26.2% within 30. The Top 5% bar? 3.9% within 30 years. The Top 1%? Effectively zero — the ladder's top rungs are simply too far and rising too fast for salary-and-savings alone, which is itself a finding (more on that below).</p>
+<p>And here's the quiet punchline of the whole tool: <strong>the median path multiplies this household's money 5.8 times over 30 years — and gains only about two percentile points</strong> (from the 80.5th to roughly the 82nd), because over the same 30 years the bars themselves roughly quintuple. Getting much richer and barely climbing are not opposites. At the same speed, they're the same outcome.</p>
+<h3>What Tab 2 teaches</h3>
+<p><strong>The average plan is a lie; the median path is the honest one.</strong> With volatility, the median outcome sits <em>below</em> the smooth Tab 1 projection at the same average return. That's volatility drag: a 30% loss needs a 43% gain to undo, so jagged returns compound worse than smooth ones. Raise the volatility slider and watch the median sag even though the "average return" never changed.</p>
+<p><strong>"Ever reaching" a rung is much easier than staying there — or ending there.</strong> Plenty of paths touch a high bar in a hot year and fall back. The odds table is deliberately about <em>touching</em>, and the 30-year distribution is about <em>ending</em>. Plan your life on the ending column, and treat the touching column as encouragement, not a promise.</p>
+<h2>Tab 3 — Retirement: how long will it last?</h2>
+<p>This is the tab I actually built the calculator for. Tabs 1 and 2 are about rank. Tab 3 is about freedom.</p>
+<p>Start at the top with <strong>your current age</strong> — it isn't decoration; it decides when Social Security can start, and everything keys off it. Then:</p>
+<ol>
+<li><strong>When &amp; spending.</strong> A "Retire in" slider from 0 to 30 years, and your expected retirement spending per year. It starts from your Tab 1 expenses, but you can override it — most people spend differently at 60 than at 40.</li>
+<li><strong>Growth &amp; inflation.</strong> Inflation (3% default) and a <em>separate</em> return for after you retire — usually lower, because most people de-risk once the paycheck stops. Keeping these separate is the whole point: your accumulation years and your drawdown years are different games.</li>
+<li><strong>Your home.</strong> By default, your primary home is <strong>excluded</strong> from the money that has to last you. That's deliberate: it answers the honest question — "how long does my money last <em>while I keep my home</em>?" If you'd genuinely sell it or treat it as the last resort, switch it on and the equity joins the pot. Other properties are counted by default (the assumption is you sell them at retirement and invest the proceeds) — turn that off if you'd keep them, and enter any rent under Other income instead, so nothing gets counted twice.</li>
+<li><strong>Social Security.</strong> Three ways: let the tool estimate it (from your years already worked and claiming age), enter a known monthly benefit, or don't count it at all. Claiming age runs 62 to 70 — delaying raises the benefit — and there's a field for a spouse/partner benefit, plus cost-of-living adjustment.</li>
+<li><strong>Other income (optional).</strong> A pension, rental income, part-time work — a monthly amount and when it starts.</li>
+</ol>
+<p>The output is a <strong>verdict</strong> (how long the money lasts — or that it outlasts the table), a breakdown of <strong>what funds your retirement</strong>, and a <strong>year-by-year table</strong>. Read the "Income in" column carefully: it shows Social Security and other income once they've actually started. Before that, it shows $0 — those are your <strong>bridge years</strong>, funded entirely from your savings.</p>
+<p><img alt="What funds your retirement — the three buckets, the pool at retirement, and the verdict" src="tab3-funds.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">What funds your retirement — the three buckets, the pool at retirement, and the verdict</p>
+<p>Our example household is 45 and testing retirement in 15 years, at 60, still spending $120,000 a year in today's dollars. By retirement day their liquid pool — brokerage and cash, home excluded — has grown to <strong>$2,915,009</strong>. First-year spending, inflated at 3% for 15 years, is $186,956. The verdict: <strong>the money lasts 35.2 years, running out around age 95.</strong> Social Security (estimated at about $4,369 a month, claimed at 67) doesn't start until 2048 — seven bridge years after they stop work — and in its first year it covers only about 39% of their spending. The other 61% comes out of the pool. Every year. That's what "retirement income" mostly is, for people who retire before their late 60s: your own savings, handed back to you slowly.</p>
+<p>Then play with <strong>Retire sooner or later?</strong> — click the 5, 10, 15, 20, or 25-year rows and the whole tab rebuilds around that choice:</p>
+<p><img alt="Retire sooner or later — the same plan at five different retirement dates" src="tab3-sooner-later.png" style="max-width:100%;"></p><p style="color:#757575;font-size:15px;text-align:center;margin-top:-6px;">Retire sooner or later — the same plan at five different retirement dates</p>
+<p>Read that table slowly, because it's the most honest five lines in personal finance. Retire in 5 years and they're out of money at about 62. In 10 years, they last to about 74. In 15, to about 95. In 20 or 25, the money outlasts the table entirely. Five extra years of work bought 7.5 more years of security, then 15.4 more, then effectively a lifetime. Same household, same spending, same returns — the <em>date</em> is the decision.</p>
+<h3>What Tab 3 teaches</h3>
+<p><strong>Percentile is not readiness.</strong> You can sit at the 95th percentile and not be able to retire — if you spend like it. You can sit at the 60th and be completely free — if you don't. Tab 1 answers "where do I rank?" Tab 3 answers "can I stop?" They are different questions, and only one of them sets you free. Chasing a rung is a fine motivator. It is a terrible retirement plan.</p>
+<p><strong>The bridge years are the real price of retiring early.</strong> Retire at 50 and claim Social Security at 67, and you have 17 years where the "Income in" column reads $0. Nothing about that is fatal — but it has to be <em>funded</em>, on purpose, in advance. The table turns a vague worry ("can I afford the gap?") into a specific number of years times a specific spending level.</p>
+<p><strong>Delaying retirement is triple-powered.</strong> Every extra year of work (a) adds a year of saving, (b) adds a year of compounding, and (c) <em>removes</em> a year of spending from the pile — and usually (d) increases your Social Security benefit. No other single lever pulls in four directions at once. The sooner-or-later table is the fastest way I've found to <em>feel</em> that: move the retirement date five years and watch a decade of security appear or disappear.</p>
+<p><strong>Spending is the lever that works twice.</strong> A dollar less of annual spending means a dollar more saved every working year — <em>and</em> a dollar less your savings have to cover every retired year. It compounds on both sides of the retirement line. Tab 3 makes this visceral: lower the spending box by a little and watch the money last years longer.</p>
+<p><strong>Your house is not a plan — unless you decide it is.</strong> Most net worth statements quietly count the home, which flatters the "how long would it last" answer with money you'd have to move out to spend. Excluding it by default isn't pessimism; it's honesty. If selling or downsizing is genuinely on your table, flip the switch and see both versions of your future. Just choose it on purpose.</p>
+<h2>Try it yourself</h2>
+<p>The calculator is free and open source, and — I'll repeat this because it matters — <strong>everything runs in your browser. No account, no server, your numbers never leave your device.</strong></p>
+<p>👉 <strong><a href="https://zanyaziz.github.io/retirement-calculator/">zanyaziz.github.io/retirement-calculator</a></strong></p>
+<p>My suggested route: start with the <strong>built-in sample</strong> to see how it feels, then clear it and enter your own rough numbers — estimates are fine, this is a compass, not an audit. Find your percentile in Tab 1. Check your odds in Tab 2. Then sit with Tab 3 and move the retirement slider until the money lasts as long as you need it to. The distance between where that slider starts and where it needs to be <em>is</em> your path to retirement — measured in years of saving, not in anyone else's percentile.</p>
+<p>The ladder will keep moving at its 5.5% a year whether you watch it or not. The point was never really the rank. It's knowing — in years, not vibes — how far you are from being able to stop.</p>
+<hr />
+<p><em>Data: Federal Reserve Survey of Consumer Finances 2025 thresholds (via DQYDJ); rung growth rates from SCF thresholds 1989–2025. The calculator is an educational tool, not financial advice — it uses simplified assumptions (steady returns in Tab 1, simulated markets in Tab 2, and the drawdown rules described above in Tab 3), and your actual mileage will vary.</em></p>
+</body></html>

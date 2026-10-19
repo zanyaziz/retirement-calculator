@@ -1,0 +1,1868 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Net Worth Percentile Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        color-scheme: light dark;
+        --bg:#f6f6f3;
+        --panel:#ffffff;
+        --panel-2:#fbfbf8;
+        --ink:#182119;
+        --muted:#5d6a5f;
+        --faint:#8a968c;
+        --line:#e0e3dc;
+        --line-strong:#c9cec4;
+        --accent:#0b6b4a;
+        --accent-ink:#ffffff;
+        --accent-soft:#e2efe8;
+        --gold:#a86f0d;
+        --gold-soft:#f6ead2;
+        --neg:#b03527;
+        --neg-soft:#f9e6e2;
+        --track:#e8eae4;
+        --shadow:0 1px 2px rgba(20,30,20,.05),0 6px 24px rgba(20,30,20,.05);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#10130f;
+          --panel:#191d18;
+          --panel-2:#151814;
+          --ink:#e9ede6;
+          --muted:#a3aea2;
+          --faint:#78847a;
+          --line:#2b312a;
+          --line-strong:#3d453c;
+          --accent:#3ec48d;
+          --accent-ink:#0a1510;
+          --accent-soft:#1d2f26;
+          --gold:#e2ac4e;
+          --gold-soft:#33290f;
+          --neg:#e5816f;
+          --neg-soft:#3a1f1a;
+          --track:#272d26;
+          --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25);
+        }
+      }
+      *{box-sizing:border-box}
+      html{-webkit-text-size-adjust:100%}
+      body{
+        margin:0;background:var(--bg);color:var(--ink);
+        font-family:"Libre Franklin",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+        font-size:15.5px;line-height:1.5;
+      }
+      .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+      .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+      .lede{max-width:780px}
+      .lede h1{font-size:clamp(26px,4.5vw,38px);line-height:1.12;font-weight:800;letter-spacing:-.02em;margin:6px 0 8px}
+      .lede p{margin:0;color:var(--muted);font-size:16px}
+      .lede p b{color:var(--ink)}
+
+      .strip{
+        position:sticky;top:0;z-index:20;margin:18px 0 20px;
+        background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+        display:flex;flex-wrap:wrap;gap:6px 26px;align-items:baseline;padding:12px 18px;
+      }
+      .strip .cell{display:flex;flex-direction:column}
+      .strip .k{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:600}
+      .strip .v{font-size:20px;font-weight:700}
+      .strip .v small{font-size:13px;color:var(--muted);font-weight:600}
+
+      .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;align-items:flex-start}
+      .toolbar button{font:inherit;font-weight:600;font-size:14px;border-radius:9px;padding:9px 16px;cursor:pointer;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)}
+      .toolbar button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+      .toolbar button:hover{filter:brightness(1.05)}
+
+      /* sample-household nudge bubble */
+      .samplewrap{display:block}
+      .samplebubble{
+        display:block;position:relative;margin-top:12px;
+        background:#7ec8f2;color:#0b2438;
+        font-size:13.5px;font-weight:600;line-height:1.4;
+        padding:10px 13px;border-radius:10px;box-shadow:var(--shadow);
+        width:max-content;max-width:min(300px,82vw);
+        animation:bubbleBob 2.6s ease-in-out infinite;
+      }
+      .samplebubble::before{
+        content:"";position:absolute;left:28px;top:-6px;width:12px;height:12px;
+        background:#7ec8f2;transform:rotate(45deg);border-radius:2px;
+      }
+      @keyframes bubbleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+      @media (prefers-reduced-motion: reduce){.samplebubble{animation:none}}
+
+      .layout{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:22px;align-items:start}
+      @media (max-width:920px){.layout{grid-template-columns:1fr}}
+
+      section.card,.rcard,.herocard{
+        background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+        padding:18px;margin-bottom:18px;
+      }
+      section.card > h2{font-size:17px;font-weight:700;margin:0 0 2px;letter-spacing:-.01em}
+      section.card .sub{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+      .sectotal{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--line-strong);margin-top:12px;padding-top:10px;font-size:14px;color:var(--muted)}
+      .sectotal b{color:var(--ink);font-size:16px}
+
+      input[type=text],input[type=number],select{
+        padding:9px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel-2);
+        color:var(--ink);font:inherit;font-size:14.5px;min-width:0;width:100%;
+      }
+      input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+      .money{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;text-align:right}
+      .lbl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:600}
+
+      /* fixed labelled fields */
+      .frow{display:grid;grid-template-columns:230px 1fr;gap:8px 12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+      .frow label{font-size:14px;font-weight:600}
+      .frow .hint{grid-column:2;font-size:12.5px;color:var(--faint);margin-top:-3px}
+      .frow-stock{grid-template-columns:230px 1fr 150px}
+      @media (max-width:560px){
+        .frow,.frow-stock{grid-template-columns:1fr}
+        .frow .hint{grid-column:1}
+      }
+      .frow .pctfield{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel-2);padding:0 10px;width:fit-content;max-width:100%;justify-self:start}
+      .frow .pctfield input{border:none;background:transparent;padding:9px 0;text-align:right;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;width:4em;flex:0 0 auto;min-width:0}
+      .frow .pctfield span{white-space:nowrap;font-size:14px;color:var(--muted)}
+      .frow .pctfield input:focus{outline:none}
+      .frow .pctfield:focus-within{outline:2px solid var(--accent)}
+
+      /* repeatable rows */
+      .row{display:grid;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+      .row:last-of-type{border-bottom:none}
+      .r-simple{grid-template-columns:1fr 140px 30px}
+      .r-prop{grid-template-columns:1fr 128px 128px 30px}
+      .r-prop .eq{font-size:13px;color:var(--muted);grid-column:1/-1;margin-top:-2px}
+      .r-prop .eq b{color:var(--accent)}
+      @media (max-width:560px){
+        .r-prop{grid-template-columns:1fr 30px}
+        .r-prop .amt{grid-column:1}
+        .r-simple{grid-template-columns:1fr 30px}
+        .r-simple .amt{grid-column:1}
+      }
+      .del{border:none;background:transparent;color:var(--faint);font-size:19px;line-height:1;cursor:pointer;width:30px;height:36px;border-radius:8px;padding:0}
+      .del:hover{color:var(--neg);background:var(--neg-soft)}
+      .addbtn{margin-top:10px;border:1px dashed var(--line-strong);background:transparent;color:var(--accent);font:inherit;font-weight:600;font-size:14px;border-radius:9px;padding:9px 14px;cursor:pointer;width:100%}
+      .addbtn:hover{background:var(--accent-soft);border-color:var(--accent)}
+
+      /* waterfall */
+      .waterfall{margin-top:16px;border-top:1px dashed var(--line-strong);padding-top:14px}
+      .waterfall h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 10px;font-weight:700}
+      .wf-row{display:grid;grid-template-columns:118px 1fr 118px;gap:10px;align-items:center;padding:4px 0}
+      .wf-row .wl{font-size:13.5px;font-weight:600}
+      .wf-row .wv{font-size:14px;font-weight:700;text-align:right}
+      .wf-track{height:20px;background:var(--track);border-radius:5px;overflow:hidden}
+      .wf-fill{height:100%;border-radius:5px;min-width:2px;transition:width .25s ease}
+      .wf-total{border-top:1px solid var(--line-strong);margin-top:6px;padding-top:8px}
+      @media (max-width:560px){.wf-row{grid-template-columns:96px 1fr 96px}}
+      .wf-note{font-size:12.5px;color:var(--faint);margin-top:8px}
+
+      /* accounts */
+      .acct{border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:12px;background:var(--panel-2)}
+      .acct .row{border-bottom:none;padding:3px 0}
+      .r-acct{grid-template-columns:1fr 118px 140px 30px}
+      @media (max-width:560px){.r-acct{grid-template-columns:1fr 30px}.r-acct .amt,.r-acct .typ{grid-column:1}}
+      .modebar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+      .modebtn{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px;cursor:pointer}
+      .modebtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+      .holdings{margin-top:10px;border-top:1px dashed var(--line-strong);padding-top:8px}
+      .holdings .hrow{display:grid;grid-template-columns:1fr 130px 30px;gap:8px;align-items:center;padding:4px 0}
+      .acctsum{font-size:13px;color:var(--muted);margin-top:8px}
+      .acctsum b{color:var(--ink)}
+
+      /* assumptions */
+      .assumps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+      @media (max-width:560px){.assumps{grid-template-columns:1fr}}
+      .assump label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px}
+      .assump .field{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel-2);padding:0 10px;width:fit-content;max-width:100%}
+      .assump .field span{white-space:nowrap;font-size:14px;color:var(--muted)}
+      .assump input{border:none;background:transparent;color:var(--ink);font:inherit;font-size:16px;width:4.2em;flex:0 0 auto;min-width:0;padding:9px 0;text-align:right;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+      .assump input:focus{outline:none}
+      .assump .field:focus-within{outline:2px solid var(--accent)}
+      .assump .note{font-size:12px;color:var(--faint);margin-top:4px}
+
+      /* hero chart */
+      .herocard{padding:20px}
+      .herocard h2{font-size:19px;font-weight:800;letter-spacing:-.01em;margin:0 0 2px}
+      .herocard .hero-sub{color:var(--muted);font-size:14px;margin:0 0 12px;max-width:760px}
+      .hero-verdict{font-size:16.5px;font-weight:700;margin:0 0 10px}
+      .hero-verdict .good{color:var(--accent)}
+      .hero-verdict .bad{color:var(--neg)}
+      .chartwrap{width:100%}
+      .chartwrap svg{width:100%;height:auto;display:block}
+      .chartnote{font-size:12.5px;color:var(--faint);margin-top:6px}
+      .legend{display:flex;gap:16px;font-size:12.5px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+      .legend .sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+
+      /* results rail */
+      aside.results{position:sticky;top:74px}
+      @media (max-width:920px){aside.results{position:static}}
+      .rcard h2{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:0 0 10px;font-weight:700}
+      .bignum{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+      .pctbadge{display:inline-block;margin-top:10px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:15px;border-radius:999px;padding:6px 14px}
+      .pctsub{color:var(--muted);font-size:14px;margin-top:9px}
+      .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:14px}
+      .statgrid .k{font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+      .statgrid .v{font-size:16.5px;font-weight:700}
+      .empty{color:var(--muted);font-size:14.5px}
+      .nexttarget{font-size:21px;font-weight:800;letter-spacing:-.01em}
+      .nexttarget span{color:var(--gold)}
+      .gapline{font-size:15px;margin-top:6px}
+      .yearsline{margin-top:12px;background:var(--gold-soft);border-radius:10px;padding:11px 13px;font-size:14.5px}
+      .yearsline b{font-size:16px}
+      table.ladder{width:100%;border-collapse:collapse;font-size:14px}
+      table.ladder th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:4px 6px 6px 0;font-weight:600}
+      table.ladder td{padding:7px 6px 7px 0;border-top:1px solid var(--line);vertical-align:top}
+      table.ladder td.r,table.ladder th.r{text-align:right;padding-right:0}
+      .wtt .bignum2{font-size:30px;font-weight:800;letter-spacing:-.01em}
+      .wtt p{margin:6px 0 0;color:var(--muted);font-size:14px}
+      .compbar{display:flex;height:16px;border-radius:5px;overflow:hidden;background:var(--track);margin:8px 0 10px}
+      .compbar div{height:100%}
+      .complist{font-size:13.5px;display:grid;gap:5px}
+      .complist .ci{display:flex;align-items:center;gap:8px;color:var(--muted)}
+      .complist .dot{width:10px;height:10px;border-radius:3px;flex:none}
+      .complist b{color:var(--ink);margin-left:auto}
+      footer{color:var(--faint);font-size:12.5px;max-width:860px;margin-top:8px}
+      footer a{color:var(--accent)}
+      footer b{color:var(--muted)}
+      .hidden{display:none !important}
+
+      /* tabs — rectangular, like the toolbar buttons */
+      .tabs{display:flex;gap:10px;background:transparent;border:none;border-radius:0;padding:0;margin:18px 0 18px;box-shadow:none;width:100%;max-width:100%;flex-wrap:wrap}
+      .tabbtn{font:inherit;font-weight:600;font-size:14px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:9px;padding:9px 16px;cursor:pointer;white-space:normal;text-align:left;flex:1 1 260px;min-width:0;line-height:1.35}
+      .tabbtn:hover{filter:brightness(1.05)}
+      .tabbtn[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+      .tabbtn small{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.85;line-height:1.3;margin-top:2px;white-space:normal}
+      @media (max-width:560px){
+        .tabs{flex-direction:column;flex-wrap:nowrap}
+        .tabbtn{flex:none;width:100%}
+      }
+      .tab-panel{margin-top:0}
+
+      /* primary-home pill (Tab 1 property rows) */
+      .pillbtn{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer}
+      .pillbtn.on{background:var(--gold);border-color:var(--gold);color:#fff}
+      .r-prop .primaryline{grid-column:1/-1;margin-top:-2px}
+
+      /* retirement (Tab 3) */
+      .segrow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
+      .segbtn{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:6px 13px;cursor:pointer}
+      .segbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+      .retbuckets{display:grid;gap:8px}
+      .retbucket{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border:1px solid var(--line);border-radius:11px;padding:10px 13px;background:var(--panel-2)}
+      .retbucket .bk{font-size:13.5px;font-weight:700}
+      .retbucket .bk small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+      .retbucket .bv{font-size:16px;font-weight:800;text-align:right;white-space:nowrap}
+      .retbucket .bv small{display:block;font-weight:600;color:var(--muted);font-size:11.5px}
+      .retcheck{display:flex;gap:9px;align-items:flex-start;font-size:14px;font-weight:600;padding:8px 0;cursor:pointer}
+      .retcheck input{width:18px;height:18px;accent-color:var(--accent);margin-top:1px;flex:none}
+      .retcheck small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+      .ret-tablewrap{max-height:430px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+      .ret-tablewrap table.odds th{position:sticky;top:0;background:var(--panel);padding-top:8px}
+      details.retdetails summary{cursor:pointer;font-weight:700;font-size:14.5px;padding:4px 0}
+      #tab-retirement .assumps.c1{grid-template-columns:1fr}
+      #tab-retirement .assumps.c2{grid-template-columns:1fr 1fr}
+      #tab-retirement .assumps.c3{grid-template-columns:repeat(3,1fr)}
+      @media (min-width:921px){#tab-retirement .assumps.c2,#tab-retirement .assumps.c3{grid-template-columns:1fr}}
+      @media (max-width:560px){#tab-retirement .assumps.c2,#tab-retirement .assumps.c3{grid-template-columns:1fr}}
+      #tab-retirement .assump .field{max-width:100%}
+      #tab-retirement .assump .field input{flex:0 1 auto;min-width:0}
+      tr.retpickrow{cursor:pointer}
+      tr.retpickrow:hover td{background:var(--accent-soft)}
+      tr.retpickrow:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+      .homeflag{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em}
+
+      /* monte carlo */
+      .mc-grid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px;align-items:start}
+      @media (max-width:920px){.mc-grid{grid-template-columns:1fr}}
+      .mc-controls .assumps{grid-template-columns:1fr 1fr}
+      @media (max-width:560px){.mc-controls .assumps{grid-template-columns:1fr}}
+      .mc-run{width:100%;margin-top:16px;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);font:inherit;font-weight:800;font-size:15px;border-radius:10px;padding:13px 16px;cursor:pointer}
+      .mc-run:hover{filter:brightness(1.06)}
+      .mc-note{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5}
+      .mc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+      @media (max-width:560px){.mc-stats{grid-template-columns:1fr 1fr}}
+      .mc-stat{border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:var(--panel-2)}
+      .mc-stat .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:700}
+      .mc-stat .v{font-size:20px;font-weight:800;letter-spacing:-.01em;margin-top:2px}
+      .mc-stat .s{font-size:12.5px;color:var(--muted)}
+      .probrow{display:grid;grid-template-columns:92px 1fr 62px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+      .probrow:last-child{border-bottom:none}
+      .probrow .pl{font-size:13.5px;font-weight:700}
+      .probrow .pv{font-size:14px;font-weight:700;text-align:right}
+      .probtrack{height:12px;background:var(--track);border-radius:999px;overflow:hidden}
+      .probfill{height:100%;background:var(--accent);border-radius:999px;min-width:2px}
+      .probfill.gold{background:var(--gold)}
+      input[type=range]{width:100%;accent-color:var(--accent)}
+      table.odds{width:100%;border-collapse:collapse;font-size:14px}
+      table.odds th{text-align:right;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:4px 6px 6px 0;font-weight:700}
+      table.odds th:first-child{text-align:left}
+      table.odds td{padding:8px 6px 8px 0;border-top:1px solid var(--line);text-align:right;vertical-align:top}
+      table.odds td:first-child{text-align:left;padding-right:6px}
+      table.odds .barwrap{height:6px;background:var(--track);border-radius:999px;overflow:hidden;margin-top:5px;min-width:64px}
+      table.odds .barfill{height:100%;background:var(--accent);border-radius:999px}
+      @media (max-width:560px){table.odds{font-size:13px}table.odds .barwrap{min-width:40px}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="lede">
+        <h1>Where does your net worth rank?</h1>
+        <p>Build your balance sheet — income, cash, properties, brokerage accounts, debts — and see your <b>U.S. household percentile</b>, the next rung above you, and <b>how many years of saving at your current pace</b> it takes to get there while the bar itself keeps rising.</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Calculator views">
+        <button type="button" class="tabbtn" role="tab" id="tabBtnCalc" aria-selected="true" aria-controls="tab-calculator" data-tab="calculator">Tab 1 — Your percentile today<small>Where you stand &amp; years to next rung</small></button>
+        <button type="button" class="tabbtn" role="tab" id="tabBtnMC" aria-selected="false" aria-controls="tab-montecarlo" data-tab="montecarlo">Tab 2 — Monte Carlo: your odds<small>2,000 simulated futures, not one path</small></button>
+        <button type="button" class="tabbtn" role="tab" id="tabBtnRet" aria-selected="false" aria-controls="tab-retirement" data-tab="retirement">Tab 3 — Retirement: how long will it last?<small>Stop working in X years — when does the money run out?</small></button>
+      </div>
+
+      <div class="strip" aria-live="polite">
+        <div class="cell"><span class="k">Net worth</span><span class="v mono" id="stripNW">—</span></div>
+        <div class="cell"><span class="k">Est. percentile</span><span class="v" id="stripPct">—</span></div>
+        <div class="cell"><span class="k">Next rung</span><span class="v" id="stripNext">—</span></div>
+        <div class="cell"><span class="k">Years at your pace</span><span class="v" id="stripYears">—</span></div>
+      </div>
+
+      <div id="tab-calculator" class="tab-panel" role="tabpanel" aria-labelledby="tabBtnCalc">
+      <div class="toolbar">
+        <span class="samplewrap">
+          <button type="button" class="primary" id="btnSample">Load a sample household</button>
+          <span class="samplebubble" id="sampleBubble" role="note">New here? Start with the sample — a filled-in household you can explore first, then swap in your own numbers.</span>
+        </span>
+        <button type="button" id="btnClear">Clear everything</button>
+      </div>
+
+      <div class="herocard" id="heroCard">
+        <h2>The climb to the next rung</h2>
+        <p class="hero-sub">Your projected net worth, year by year, if you keep earning and saving exactly what you save now — plotted against the next percentile bar, which rises every year at its own long-run pace. Both lines come from the same simulation as the years figure, so they always agree.</p>
+        <p class="hero-verdict" id="heroVerdict"><span class="empty">Enter your numbers below and the race appears here.</span></p>
+        <div class="chartwrap" id="heroChart"></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--accent)"></span>Your projected net worth</span>
+          <span><span class="sw" style="background:var(--gold)"></span><span id="heroLegendBar">The next bar</span></span>
+        </div>
+        <div class="chartnote">Log scale (each gridline step is roughly a tripling). The bar is a moving target: catching it means out-growing it, not just reaching today’s number.</div>
+      </div>
+
+      <div class="layout">
+        <div class="forms">
+          <section class="card" id="secIncome">
+            <h2>1 · Income → savings</h2>
+            <p class="sub">Your income, what the tax man takes, and what you spend. What’s left — your annual savings — is the engine of the whole projection.</p>
+            <div class="frow">
+              <label for="incSalary">Base salary (cash)</label>
+              <input id="incSalary" type="text" class="money" inputmode="numeric" placeholder="$ / year" />
+            </div>
+            <div class="frow">
+              <label for="incBonus">Annual bonus (cash)</label>
+              <input id="incBonus" type="text" class="money" inputmode="numeric" placeholder="$ / year" />
+            </div>
+            <div class="frow frow-stock">
+              <label for="incStock">Stock compensation (annual value)</label>
+              <input id="incStockLabel" type="text" placeholder="Company / ticker (optional)" />
+              <input id="incStock" type="text" class="money" inputmode="numeric" placeholder="$ / year" />
+            </div>
+            <div id="otherIncomeRows"></div>
+            <button type="button" class="addbtn" data-add="otherincome">+ Add other income</button>
+            <div class="frow">
+              <label for="taxRate">Effective tax rate</label>
+              <div class="pctfield"><input id="taxRate" type="number" step="0.5" min="0" max="90" value="33" /><span>% of income</span></div>
+              <div class="hint">Your all-in rate — federal, state, payroll — best estimate.</div>
+            </div>
+            <div class="frow">
+              <label for="expenses">Annual expenses (everything you spend in a year)</label>
+              <input id="expenses" type="text" class="money" inputmode="numeric" placeholder="$ / year" />
+              <div class="hint">Housing, childcare, food, travel, everything. This is the number that decides how much you save.</div>
+            </div>
+            <div class="frow">
+              <label for="saveOverride">…or enter savings directly</label>
+              <input id="saveOverride" type="text" class="money" inputmode="numeric" placeholder="Optional — overrides the math above" />
+              <div class="hint">If filled, this figure is used for the projection instead of income − taxes − expenses.</div>
+            </div>
+
+            <div class="waterfall" id="waterfall">
+              <h3>Where a year of income goes</h3>
+              <div class="wf-row"><span class="wl">Income</span><div class="wf-track"><div class="wf-fill" id="wfInc" style="background:var(--accent);width:0%"></div></div><span class="wv mono" id="wfIncV">$0</span></div>
+              <div class="wf-row"><span class="wl">− Taxes</span><div class="wf-track"><div class="wf-fill" id="wfTax" style="background:var(--neg);width:0%"></div></div><span class="wv mono" id="wfTaxV">$0</span></div>
+              <div class="wf-row"><span class="wl">− Expenses</span><div class="wf-track"><div class="wf-fill" id="wfExp" style="background:var(--gold);width:0%"></div></div><span class="wv mono" id="wfExpV">$0</span></div>
+              <div class="wf-row wf-total"><span class="wl">= Annual savings</span><div class="wf-track"><div class="wf-fill" id="wfSav" style="background:var(--accent);width:0%"></div></div><span class="wv mono" id="wfSavV">$0</span></div>
+              <div class="wf-note" id="wfNote"></div>
+            </div>
+            <div class="sectotal"><span>Total income</span><b class="mono" id="incomeTotal">$0</b></div>
+          </section>
+
+          <section class="card" id="secCash">
+            <h2>2 · Cash &amp; other assets</h2>
+            <p class="sub">Cash is counted at face value and assumed to grow at 0%. Other assets (a business stake, valuables, anything not below) are treated as invested and grow at your return assumption.</p>
+            <div class="frow">
+              <label for="cashField">Cash holdings (checking, savings, money market)</label>
+              <input id="cashField" type="text" class="money" inputmode="numeric" placeholder="$" />
+            </div>
+            <div class="frow">
+              <label for="otherAssets">Other assets (optional)</label>
+              <input id="otherAssets" type="text" class="money" inputmode="numeric" placeholder="$" />
+            </div>
+            <div class="sectotal"><span>Total cash + other assets</span><b class="mono" id="cashTotal">$0</b></div>
+          </section>
+
+          <section class="card" id="secProps">
+            <h2>3 · Properties</h2>
+            <p class="sub">Homes, rentals, land — what each is worth today and what you still owe on it. Only the equity counts toward net worth, and in the projection the equity grows at your property-appreciation assumption (0% by default — conservative). Mark one property as your <b>primary home</b> — Tab 3 (Retirement) excludes it from the drawdown by default, so you can see how long your money lasts while you keep your home.</p>
+            <div id="propRows"></div>
+            <button type="button" class="addbtn" data-add="property">+ Add property</button>
+            <div class="sectotal"><span>Total property equity</span><b class="mono" id="propTotal">$0</b></div>
+            <div class="sectotal" style="border:none;margin-top:2px;padding-top:0"><span>Primary home / other properties</span><b class="mono" id="propSplit" style="font-size:13.5px">—</b></div>
+          </section>
+
+          <section class="card" id="secAccts">
+            <h2>4 · Brokerage &amp; retirement accounts</h2>
+            <p class="sub">Add each account — brokerage, 401(k), IRA, HSA. Keep it rough with a single balance (“Total only”), or switch to “Detailed” and itemize every symbol; the account total then sums itself.</p>
+            <div id="acctRows"></div>
+            <button type="button" class="addbtn" data-add="account">+ Add account</button>
+            <div class="sectotal"><span>Total invested</span><b class="mono" id="acctTotal">$0</b></div>
+          </section>
+
+          <section class="card" id="secDebts">
+            <h2>5 · Other liabilities</h2>
+            <p class="sub">Debts not tied to a property above — car loans, credit cards, student loans. Held flat in the projection (no paydown schedule).</p>
+            <div id="debtRows"></div>
+            <button type="button" class="addbtn" data-add="debt">+ Add liability</button>
+            <div class="sectotal"><span>Total other liabilities</span><b class="mono" id="debtTotal">$0</b></div>
+          </section>
+
+          <section class="card" id="secAssump">
+            <h2>6 · Assumptions</h2>
+            <p class="sub">Each percentile bar grows at its own documented long-run rate (about 5.5%/yr — see “How this works”). The adjustment shifts every bar’s rate up or down together, if you think the coming decades will run hotter or cooler than 1989–2025 did.</p>
+            <div class="assumps">
+              <div class="assump">
+                <label for="aReturn">Return on invested assets</label>
+                <div class="field"><input id="aReturn" type="number" step="0.1" value="6" /><span>% / yr</span></div>
+                <div class="note">Applied to brokerage + other assets; your savings are added each year.</div>
+              </div>
+              <div class="assump">
+                <label for="aApprec">Property appreciation</label>
+                <div class="field"><input id="aApprec" type="number" step="0.1" value="0" /><span>% / yr</span></div>
+                <div class="note">Applied to property equity. 0% is the conservative default.</div>
+              </div>
+              <div class="assump">
+                <label for="aBarAdj">Bar growth adjustment</label>
+                <div class="field"><input id="aBarAdj" type="number" step="0.1" value="0" /><span>pts / yr</span></div>
+                <div class="note">0 = documented long-run rates. +1 makes every bar rise 1 pt/yr faster.</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="results">
+          <div class="rcard" id="resMain">
+            <h2>Your standing</h2>
+            <div id="resEmpty" class="empty">Enter anything on the left — a salary, a bank balance, a home — and your percentile appears here.</div>
+            <div id="resBody" class="hidden">
+              <div class="bignum mono" id="resNW">$0</div>
+              <span class="pctbadge" id="resPct">—</span>
+              <div class="pctsub" id="resPctSub"></div>
+              <div class="statgrid">
+                <div><div class="k">Total assets</div><div class="v mono" id="resAssets">—</div></div>
+                <div><div class="k">Total debts</div><div class="v mono" id="resDebts">—</div></div>
+                <div><div class="k">Saved per year</div><div class="v mono" id="resSave">—</div></div>
+                <div><div class="k">Savings rate</div><div class="v mono" id="resRate">—</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rcard hidden" id="resComp">
+            <h2>What your net worth is made of</h2>
+            <div class="compbar" id="compBar"></div>
+            <div class="complist" id="compList"></div>
+          </div>
+
+          <div class="rcard hidden" id="resNext">
+            <h2>The next rung</h2>
+            <div class="nexttarget" id="nextName">—</div>
+            <div class="gapline" id="nextGap"></div>
+            <div class="yearsline" id="nextYears"></div>
+            <div style="margin-top:14px">
+              <table class="ladder">
+                <thead><tr><th>Rung</th><th class="r">Bar today</th><th class="r">Gap</th><th class="r">Years</th></tr></thead>
+                <tbody id="ladderBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rcard hidden" id="resWhat">
+            <h2>What it would take</h2>
+            <div class="wtt">
+              <div class="bignum2 mono" id="wttNum">—</div>
+              <p id="wttText"></p>
+            </div>
+          </div>
+
+          <div class="rcard hidden" id="resLadder">
+            <h2>The ladder (today’s bars)</h2>
+            <div class="chartwrap" id="ladderChart"></div>
+            <div class="chartnote">Each dot is the net worth needed to enter that bracket, on a log scale. The line is you.</div>
+          </div>
+        </aside>
+      </div>
+      </div><!-- /tab-calculator -->
+
+      <div id="tab-montecarlo" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabBtnMC">
+        <div class="herocard">
+          <h2>Monte Carlo — what are the odds?</h2>
+          <p class="hero-sub">Tab 1 assumes your return is the same every year. Real markets aren’t. This tab runs thousands of different market histories using the <b>same balance sheet and savings from Tab 1</b> — same starting net worth, same annual savings, same mean return — but each year’s return is drawn at random. The spread of outcomes is the honest answer: a median, a bad-luck path, a good-luck path, and your chance of clearing each percentile bar while that bar keeps rising.</p>
+          <p class="hero-verdict" id="mcVerdict"><span class="empty">Enter your numbers in Tab 1 (or load the sample), then run the simulation.</span></p>
+          <div class="chartwrap" id="mcFanChart"></div>
+          <div class="legend">
+            <span><span class="sw" style="background:var(--accent)"></span>Median outcome</span>
+            <span><span class="sw" style="background:#9ecbb6"></span>Middle 50% (25th–75th)</span>
+            <span><span class="sw" style="background:var(--track)"></span>10th–90th range</span>
+            <span><span class="sw" style="background:var(--gold)"></span><span id="mcFanBarLabel">Next rung bar</span></span>
+            <span><span class="sw" style="background:var(--faint)"></span><span id="mcFanCurrLabel">Current rung bar</span></span>
+          </div>
+          <div class="chartnote">Fan chart covers 40 years on a log scale, like Tab 1. Each band is built from every simulated path, year by year — not a single forecast. Both bar lines rise at their documented long-run rates.</div>
+        </div>
+
+        <div class="mc-grid">
+          <section class="card mc-controls">
+            <h2>Simulation settings</h2>
+            <p class="sub">Uses your Tab 1 inputs live. Change the mean return, property appreciation, or bar adjustment in Tab 1 §6 and re-run.</p>
+            <div style="display:grid;gap:14px">
+              <div class="assump">
+                <label for="mcVol">Market volatility — <span id="mcVolLabel" class="mono">15% / yr</span></label>
+                <input id="mcVol" type="range" min="5" max="30" step="1" value="15" />
+                <div class="note">Standard deviation of each year’s random return, around your Tab 1 mean return (default 6%). 15% is a rough long-run guide for a stock-heavy portfolio; past volatility is only a guide. Higher = wider spread and a lower median (volatility drag).</div>
+              </div>
+              <div class="assump">
+                <label for="mcSims">Number of simulations</label>
+                <select id="mcSims">
+                  <option value="500">500 paths — fast preview</option>
+                  <option value="2000" selected>2,000 paths — standard</option>
+                  <option value="5000">5,000 paths — smoothest</option>
+                </select>
+                <div class="note">The standard run is 2,000 simulated futures over 40 years, in your browser.</div>
+              </div>
+            </div>
+            <div class="sectotal"><span>Starting net worth (Tab 1)</span><b class="mono" id="mcStartNW">—</b></div>
+            <div class="sectotal" style="border:none;margin-top:4px;padding-top:0"><span>Mean return / Savings</span><b class="mono" id="mcStartAssump">—</b></div>
+            <button type="button" class="mc-run" id="btnRunMC">▶ Run simulation</button>
+            <p class="mc-note"><b>Honesty notes:</b> returns are random draws around the assumed average, so these are illustrative odds, not predictions. Past volatility is a rough guide only. The percentile bars are held to their documented long-run growth (~5.5%/yr, plus your Tab 1 adjustment) for clarity — the uncertainty shown here is your path, not the bars. Each year: invested assets earn the random return, your Tab 1 savings are added, cash stays flat, property equity follows your appreciation assumption, and other liabilities stay flat. Nothing is stored or sent — everything runs client-side, matching Tab 1.</p>
+          </section>
+
+          <div>
+            <section class="card">
+              <h2>Where you could land</h2>
+              <p class="sub" id="mcSummarySub">Run the simulation to see the median and range at 10, 20, and 30 years.</p>
+              <div class="mc-stats">
+                <div class="mc-stat"><div class="k">In 10 years · median</div><div class="v mono" id="mcMed10">—</div><div class="s" id="mcRange10">10th–90th: —</div></div>
+                <div class="mc-stat"><div class="k">In 20 years · median</div><div class="v mono" id="mcMed20">—</div><div class="s" id="mcRange20">10th–90th: —</div></div>
+                <div class="mc-stat"><div class="k">In 30 years · median</div><div class="v mono" id="mcMed30">—</div><div class="s" id="mcRange30">10th–90th: —</div></div>
+              </div>
+              <h3 style="font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin:18px 0 6px">Odds of ever reaching each rung</h3>
+              <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Share of simulations whose net worth reaches that rung’s (rising) bar <b>at any point</b> within 10, 20, or 30 years — not just where they end up.</p>
+              <div id="mcProbs"><p class="empty">No results yet — press Run simulation.</p></div>
+            </section>
+
+            <section class="card">
+              <h2>Distribution at 30 years</h2>
+              <p class="sub">Every simulated path’s net worth at year 30, grouped into buckets. The gold line is the year-30 value of your next rung’s bar.</p>
+              <div class="chartwrap" id="mcHist"></div>
+              <div class="chartnote" id="mcHistNote">Run the simulation to see the distribution.</div>
+            </section>
+          </div>
+        </div>
+      </div><!-- /tab-montecarlo -->
+
+      <div id="tab-retirement" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabBtnRet">
+        <div class="herocard">
+          <h2>Retirement — how long will it last?</h2>
+          <p class="hero-sub">Pick how many years from now you'd like to stop working. This tab grows your <b>Tab 1 balance sheet</b> to that day — same savings, same return — then draws it down against your spending as it inflates, year by year, until the money runs out. Your <b>primary home is excluded by default</b>: the headline answer is how long your money lasts <i>while you keep your home</i>.</p>
+          <p class="hero-verdict" id="retVerdict"><span class="empty">Enter your numbers in Tab 1 (or load the sample), then set your retirement below.</span></p>
+          <div class="chartwrap" id="retChart"></div>
+          <div class="legend">
+            <span><span class="sw" style="background:var(--accent)"></span>Money you can spend (pool)</span>
+            <span><span class="sw" style="background:var(--gold)"></span>Primary home equity (when it's the last resort)</span>
+            <span><span class="sw" style="background:var(--faint)"></span>Retirement day</span>
+          </div>
+          <div class="chartnote">Linear scale — zero matters here. The pool climbs while you work and save, then draws down. Social Security and other income reduce each year's withdrawal once they start.</div>
+        </div>
+
+        <div class="mc-grid">
+          <div>
+            <section class="card" id="retAgeCard" style="border-color:var(--accent)">
+              <h2>Start here · Your current age</h2>
+              <p class="sub">This one number anchors the whole tab: it sets the age your money has to last to, and <b>when Social Security starts</b> — your claiming age in §4 is counted from it.</p>
+              <div class="assump">
+                <label for="retAge">Your current age</label>
+                <div class="field"><input id="retAge" type="number" min="18" max="90" step="1" placeholder="39" /><span>yrs</span></div>
+              </div>
+              <p class="mc-note" id="retAgeSummary" style="margin-bottom:0">Enter your age to pin Social Security to your claiming age.</p>
+            </section>
+
+            <section class="card">
+              <h2>1 · When &amp; spending</h2>
+              <p class="sub">Uses your Tab 1 inputs live — change anything there and this tab follows.</p>
+              <div class="assump" style="margin-bottom:14px">
+                <label for="retYears">Retire in — <span id="retYearsLabel" class="mono">10 years</span></label>
+                <input id="retYears" type="range" min="0" max="30" step="1" value="10" />
+                <div class="note">0 = retire today. While you keep working, your Tab 1 savings are added every year.</div>
+              </div>
+              <div class="assumps c1">
+                <div class="assump">
+                  <label for="retExpOverride">Retirement spending / yr</label>
+                  <div class="field"><input id="retExpOverride" type="text" class="money" inputmode="numeric" placeholder="Tab 1" style="width:7.5em;text-align:right" /><span>$/yr today</span></div>
+                  <div class="note">Blank = your Tab 1 annual expenses (<span id="retExpFromTab1" class="mono">—</span>). In today's dollars; inflation below carries it forward.</div>
+                </div>
+              </div>
+              <div class="sectotal"><span>Spending in your first retirement year</span><b class="mono" id="retFirstYearSpend">—</b></div>
+            </section>
+
+            <section class="card">
+              <h2>2 · Growth &amp; inflation</h2>
+              <p class="sub">Before retirement, your money grows at Tab 1's return (<span id="retPreReturnNote" class="mono">—</span>) with your savings added. After retirement it can grow at a different, usually more cautious, rate.</p>
+              <div class="assumps c3">
+                <div class="assump">
+                  <label for="retInfl">Inflation</label>
+                  <div class="field"><input id="retInfl" type="number" step="0.1" value="3" /><span>% / yr</span></div>
+                  <div class="note">Applied to your spending every year, before and after retirement.</div>
+                </div>
+                <div class="assump">
+                  <label for="retPostReturn">Return after retiring</label>
+                  <div class="field"><input id="retPostReturn" type="number" step="0.1" placeholder="Tab 1" /><span>% / yr</span></div>
+                  <div class="note">Blank = Tab 1's return on invested assets. Many people model a lower, safer figure here.</div>
+                </div>
+                <div class="assump">
+                  <label for="retCola">Social Security COLA</label>
+                  <div class="field"><input id="retCola" type="number" step="0.1" value="2.5" /><span>% / yr</span></div>
+                  <div class="note">Yearly cost-of-living rise in benefits once they start (2.8% for 2026).</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <h2>3 · Your home</h2>
+              <p class="sub" id="retHomeSummary">—</p>
+              <div class="lbl">Use my primary home to fund retirement?</div>
+              <div class="segrow" id="retHomeSeg">
+                <button type="button" class="segbtn on" data-rethome="keep">No — keep my home</button>
+                <button type="button" class="segbtn" data-rethome="last">Yes — as a last resort</button>
+                <button type="button" class="segbtn" data-rethome="sell">Yes — sell when I retire</button>
+              </div>
+              <p class="mc-note" id="retHomeNote">Your home is excluded. The answer below is how long your money lasts while you keep living in it.</p>
+              <label class="retcheck"><input type="checkbox" id="retCountOther" checked /><span>Count other property equity<small>Rentals and other non-primary properties are assumed sold at retirement, proceeds invested at your post-retirement return. Turn this off if you'd keep them — and if you want the rent counted, enter it under Other income instead (counting both would double-count).</small></span></label>
+              <p class="mc-note hidden" id="retNoPrimaryNote"><b>No primary home is marked in Tab 1.</b> Mark one in Tab 1 §3 to exclude it here — until then, all property equity is counted above.</p>
+            </section>
+
+            <section class="card">
+              <h2>4 · Social Security</h2>
+              <p class="sub">A rough estimate, labelled as one — the real figure is on your statement at ssa.gov. Benefits start at your <b>claiming age, not at retirement</b>: retire early and there are bridge years with no benefit.</p>
+              <div class="segrow" id="retSSSeg">
+                <button type="button" class="segbtn on" data-retss="est">Estimate it for me</button>
+                <button type="button" class="segbtn" data-retss="manual">I know mine</button>
+                <button type="button" class="segbtn" data-retss="none">Don't count it</button>
+              </div>
+              <div class="assumps c2">
+                <div class="assump" id="retSSYearsWrap">
+                  <label for="retSSYearsWorked">Years already worked</label>
+                  <div class="field"><input id="retSSYearsWorked" type="number" min="0" max="50" step="1" placeholder="age − 22" /><span>yrs</span></div>
+                  <div class="note">Blank = age − 22. Past + future working years are averaged over the top 35, as SSA does.</div>
+                </div>
+                <div class="assump">
+                  <label for="retSSClaimAge">Claiming age</label>
+                  <div class="field"><input id="retSSClaimAge" type="number" min="62" max="70" step="1" value="67" /><span>yrs</span></div>
+                  <div class="note">62 = earliest (≈70% of the full benefit at 67); 70 = latest (≈124%).</div>
+                </div>
+                <div class="assump hidden" id="retSSManualWrap">
+                  <label for="retSSManual">My monthly benefit at claiming age</label>
+                  <div class="field"><input id="retSSManual" type="text" class="money" inputmode="numeric" placeholder="$" style="width:7.5em;text-align:right" /><span>$/mo</span></div>
+                  <div class="note">In today's dollars, from your SSA statement.</div>
+                </div>
+                <div class="assump">
+                  <label for="retSSSpouse">Spouse / partner benefit (optional)</label>
+                  <div class="field"><input id="retSSSpouse" type="text" class="money" inputmode="numeric" placeholder="$" style="width:7.5em;text-align:right" /><span>$/mo</span></div>
+                  <div class="note">If filled, starts the same year as yours, in today's dollars.</div>
+                </div>
+              </div>
+              <div class="sectotal"><span>Estimated benefit</span><b class="mono" id="retSSEst">—</b></div>
+              <p class="mc-note" id="retSSDetail"></p>
+            </section>
+
+            <section class="card">
+              <h2>5 · Other income in retirement (optional)</h2>
+              <p class="sub">A pension, rent from a property you're keeping, part-time work — anything that offsets spending.</p>
+              <div class="assumps c2">
+                <div class="assump">
+                  <label for="retOtherInc">Monthly income</label>
+                  <div class="field"><input id="retOtherInc" type="text" class="money" inputmode="numeric" placeholder="$" style="width:7.5em;text-align:right" /><span>$/mo today</span></div>
+                  <div class="note">In today's dollars; it rises with inflation once it starts.</div>
+                </div>
+                <div class="assump">
+                  <label for="retOtherIncStart">Starts in</label>
+                  <div class="field"><input id="retOtherIncStart" type="number" min="0" max="60" step="1" placeholder="retirement" style="width:6.8em" /><span>yrs</span></div>
+                  <div class="note">Years from now. Blank = when you retire.</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div>
+            <section class="card">
+              <h2>What funds your retirement</h2>
+              <p class="sub">Your Tab 1 balance sheet in three buckets — today, and projected on retirement day. They always add back to your Tab 1 net worth; this tab only decides which buckets the retirement math may spend.</p>
+              <div class="retbuckets">
+                <div class="retbucket"><span class="bk">A · Liquid money<small>Invested + cash − other debts. Always counted.</small></span><span class="bv mono" id="retBucketA">—<small>today</small></span></div>
+                <div class="retbucket"><span class="bk">B · Other property equity<small>Non-primary properties. Counted if the switch in §3 is on.</small></span><span class="bv mono" id="retBucketB">—<small>today</small></span></div>
+                <div class="retbucket"><span class="bk">C · Primary home equity<small>Excluded by default — see §3.</small></span><span class="bv mono" id="retBucketC">—<small>today</small></span></div>
+              </div>
+              <div class="mc-stats" style="margin-top:16px">
+                <div class="mc-stat"><div class="k">Pool at retirement</div><div class="v mono" id="retPoolAtRet">—</div><div class="s" id="retPoolSub">—</div></div>
+                <div class="mc-stat"><div class="k">First-year spending</div><div class="v mono" id="retSpendStat">—</div><div class="s" id="retSpendSub">—</div></div>
+                <div class="mc-stat"><div class="k">Money runs out</div><div class="v mono" id="retRunsOut">—</div><div class="s" id="retRunsOutSub">—</div></div>
+              </div>
+              <p class="mc-note" id="retSSCover"></p>
+            </section>
+
+            <section class="card">
+              <h2>Retire sooner or later?</h2>
+              <p class="sub">The same plan at five retirement dates — the decision this tab exists for. <b>Click any row</b> to load that date into the whole tab: the slider, verdict, chart, and year-by-year table all follow.</p>
+              <div id="retCompare"><p class="empty">Enter your numbers in Tab 1 to see the comparison.</p></div>
+            </section>
+
+            <section class="card">
+              <details class="retdetails">
+                <summary>Year by year</summary>
+                <p class="sub" style="margin-top:8px">Every retirement year: what you started with, what it earned, what came in, what you spent, what's left.</p>
+                <div class="ret-tablewrap"><div id="retYearTable"><p class="empty" style="padding:10px">No data yet.</p></div></div>
+                <p class="mc-note" id="retIncomeNote"></p>
+              </details>
+              <p class="mc-note"><b>Honesty notes:</b> this is one steady path, not a forecast — returns are the same every year (Tab 2 shows what varying returns do to the climb; a retirement Monte Carlo would be the next step). No tax on withdrawals, no healthcare-cost spike, mortgages held flat exactly as in Tab 1, and selling a property is modelled with no sale costs or tax. The Social Security estimate uses the 2026 SSA formula (bend points $1,286 / $7,749; wage base $184,500; full retirement age 67) on a level-earnings assumption — treat it as a ballpark and replace it with your SSA statement figure for anything serious. Nothing is stored or sent — everything runs client-side, matching Tabs 1 and 2.</p>
+            </section>
+          </div>
+        </div>
+      </div><!-- /tab-retirement -->
+
+
+      <footer>
+        <p><b>Thresholds: Federal Reserve Survey of Consumer Finances 2025 (via DQYDJ).</b> Full percentile table as tabulated from the SCF public microdata by <a href="https://dqydj.com/net-worth-percentiles/" target="_blank" rel="noopener">DQYDJ’s net worth percentile analysis</a>.</p>
+        <p><b>How this works.</b> The percentile bars are moving targets: in the simulation each bar rises at its documented long-run SCF rate — about 5.5%/yr for every rung from 1989 to 2025 (the 90th-percentile bar compounded at 5.52%/yr; the 95th and 99th at 5.59%/yr; the 93rd, 97th and 98th are assigned that same common pace, since they were only published in later surveys). Recent survey windows ran faster than the long run, which is what the bar-growth adjustment is for. Your percentile between published rungs is a log-linear interpolation — an estimate, not a measurement. The Tab 1 projection holds your income, savings, return, and appreciation constant, adds your savings to your invested assets each year, keeps liabilities flat, and ignores market swings and life changes. Tab 2 (Monte Carlo) relaxes that last part: returns vary randomly each year around the same mean, so you see a distribution and odds instead of a single line. Tab 3 (Retirement) takes the Tab 1 projection to your chosen retirement year, then draws the pool down against inflation-rising spending, less Social Security (estimated with the 2026 SSA bend-point formula on capped, level earnings) and any other income, until it runs out; the primary home marked in §3 is excluded from that pool unless you choose to count it. These are scenarios, not forecasts, and not financial advice. Your entries never leave this page — nothing is stored or sent anywhere.</p>
+      </footer>
+    </div>
+
+<script>
+"use strict";
+/* ---------- Percentile thresholds: Federal Reserve 2025 SCF (via DQYDJ) ---------- */
+var PCT = [
+[1,-71262],[2,-39680],[3,-26884],[4,-14494],[5,-8806],[6,-4142],[7,-1632],[8,-86],[9,29],[10,225],
+[11,720],[12,1328],[13,2166],[14,3740],[15,5052],[16,6420],[17,7734],[18,9246],[19,10862],[20,13216],
+[21,15454],[22,17504],[23,20932],[24,24620],[25,27786],[26,31970],[27,37986],[28,43003],[29,49397],[30,55384],
+[31,60678],[32,66704],[33,72136],[34,77222],[35,82258],[36,88503],[37,97319],[38,103802],[39,111049],[40,120570],
+[41,130010],[42,138610],[43,145804],[44,155538],[45,165090],[46,178466],[47,188120],[48,199026],[49,207402],[50,215916],
+[51,225586],[52,236220],[53,248582],[54,260332],[55,272680],[56,283202],[57,298134],[58,312562],[59,328324],[60,346360],
+[61,367666],[62,393094],[63,412390],[64,429810],[65,448456],[66,475970],[67,500328],[68,534796],[69,568682],[70,597046],
+[71,627620],[72,666884],[73,711838],[74,761250],[75,812492],[76,868740],[77,920960],[78,970608],[79,1031844],[80,1084972],
+[81,1153922],[82,1231286],[83,1302406],[84,1391057],[85,1502940],[86,1663620],[87,1847490],[88,2021180],[89,2325686],[90,2550306],
+[91,2820172],[92,3088600],[93,3448610],[94,4089546],[95,4907372],[96,5981288],[97,7422720],[98,10034008],[99,16463320],
+[99.5,22930532],[99.9,63821752]
+];
+/* Documented long-run bar growth (SCF thresholds, 1989–2025): 90th = 5.52%/yr;
+   95th & 99th = 5.59%/yr; every other rung uses the common 5.59% pace. */
+var BAR_BASE = 5.59, BAR_90 = 5.52;
+function barRatePct(rung, adjPts){
+  return (Math.abs(rung-90)<1e-9 ? BAR_90 : BAR_BASE) + adjPts;
+}
+var MILESTONES = [25,50,60,70,75,80,85,90,91,92,93,94,95,96,97,98,99,99.5,99.9];
+function thr(p){ for(var i=0;i<PCT.length;i++){ if(Math.abs(PCT[i][0]-p)<1e-9) return PCT[i][1]; } return null; }
+function percentileOf(nw){
+  if(nw <= PCT[0][1]) return PCT[0][0]*0.6;
+  if(nw >= PCT[PCT.length-1][1]) return 99.9;
+  for(var i=0;i<PCT.length-1;i++){
+    var p1=PCT[i][0], v1=PCT[i][1], p2=PCT[i+1][0], v2=PCT[i+1][1];
+    if(nw>=v1 && nw<=v2){
+      var f;
+      if(v1>0 && v2>0){ f=(Math.log(nw)-Math.log(v1))/(Math.log(v2)-Math.log(v1)); }
+      else { f=(nw-v1)/(v2-v1); }
+      return p1 + f*(p2-p1);
+    }
+  }
+  return 99.9;
+}
+function topLabel(p){
+  var top=100-p;
+  return "top ~"+(top>=10? Math.round(top) : (Math.round(top*10)/10))+"%";
+}
+function rungName(p){ return p>=99 ? ("Top "+(Math.round((100-p)*10)/10)+"%") : ("Top "+Math.round(100-p)+"%"); }
+
+/* ---------- formatting ---------- */
+function fmt(n){
+  var neg=n<0; n=Math.abs(Math.round(n));
+  var s=n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  return (neg?"-$":"$")+s;
+}
+function fmtShort(n){
+  var neg=n<0, a=Math.abs(n), out;
+  if(a>=1e6) out=(a/1e6).toFixed(a>=1e7?1:2).replace(/\.?0+$/,"")+"M";
+  else if(a>=1e3) out=Math.round(a/1e3)+"k";
+  else out=Math.round(a)+"";
+  return (neg?"-$":"$")+out;
+}
+function parseNum(el){
+  if(!el) return 0;
+  var v=(el.value||"").toString().replace(/[^0-9.\-]/g,"");
+  var n=parseFloat(v);
+  return isNaN(n)?0:n;
+}
+function hasVal(el){ return el && (el.value||"").toString().replace(/[^0-9.\-]/g,"")!=="" && !isNaN(parseFloat((el.value||"").toString().replace(/[^0-9.\-]/g,""))); }
+function esc(s){ return (s||"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmtYears(y){
+  if(y===null||y===undefined) return "not on path";
+  if(y<1) return "under a year";
+  return (Math.round(y*10)/10).toString().replace(/\.0$/,"")+" yrs";
+}
+
+/* ---------- row builders ---------- */
+function el(html){ var d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
+function otherIncomeRow(label,amount){
+  return el('<div class="row r-simple">'
+    +'<input type="text" class="s-label" placeholder="Other income (e.g. rental income, side business)" value="'+esc(label||"")+'" />'
+    +'<input type="text" class="s-amt money amt" inputmode="numeric" placeholder="$ / year" value="'+(amount||"")+'" />'
+    +'<button type="button" class="del" title="Remove" aria-label="Remove">×</button></div>');
+}
+function simpleRow(label,amount,ph){
+  return el('<div class="row r-simple">'
+    +'<input type="text" class="s-label" placeholder="'+esc(ph)+'" value="'+esc(label||"")+'" />'
+    +'<input type="text" class="s-amt money amt" inputmode="numeric" placeholder="$" value="'+(amount||"")+'" />'
+    +'<button type="button" class="del" title="Remove" aria-label="Remove">×</button></div>');
+}
+function propRow(name,value,loan,primary){
+  return el('<div class="row r-prop">'
+    +'<input type="text" class="p-name" placeholder="Property name (e.g. Primary home, rental in Austin)" value="'+esc(name||"")+'" />'
+    +'<input type="text" class="p-val money amt" inputmode="numeric" placeholder="Value $" value="'+(value||"")+'" />'
+    +'<input type="text" class="p-loan money amt" inputmode="numeric" placeholder="Owed $" value="'+(loan||"")+'" />'
+    +'<button type="button" class="del" title="Remove" aria-label="Remove property">×</button>'
+    +'<div class="primaryline"><button type="button" class="pillbtn p-primary'+(primary?" on":"")+'" aria-pressed="'+(primary?"true":"false")+'" title="Mark as your primary home — Tab 3 excludes it from the retirement drawdown by default">'+(primary?"★ Primary home":"☆ Mark as primary home")+'</button></div>'
+    +'<div class="eq"></div></div>');
+}
+function syncPrimaryPill(btn){
+  var on=btn.classList.contains("on");
+  btn.setAttribute("aria-pressed", on?"true":"false");
+  btn.textContent=on? "\u2605 Primary home" : "\u2606 Mark as primary home";
+}
+function holdingRow(sym,val){
+  return el('<div class="hrow">'
+    +'<input type="text" class="h-sym" placeholder="Symbol or fund (e.g. VOO, AAPL, BTC)" value="'+esc(sym||"")+'" />'
+    +'<input type="text" class="h-val money" inputmode="numeric" placeholder="$" value="'+(val||"")+'" />'
+    +'<button type="button" class="del" title="Remove holding" aria-label="Remove holding">×</button></div>');
+}
+function acctRow(name,type,total,mode,holdings){
+  var types=["Brokerage","401(k)","IRA","Roth IRA","HSA","529 / Education","Crypto","Pension / other"];
+  var sel=types.map(function(t){return '<option'+(t===type?" selected":"")+'>'+t+'</option>';}).join("");
+  var a=el('<div class="acct" data-mode="'+(mode||"simple")+'">'
+    +'<div class="row r-acct">'
+    +'<input type="text" class="a-name" placeholder="Account name (e.g. Robinhood, Fidelity 401k)" value="'+esc(name||"")+'" />'
+    +'<select class="a-type typ" aria-label="Account type">'+sel+'</select>'
+    +'<input type="text" class="a-total money amt" inputmode="numeric" placeholder="Balance $" value="'+(total||"")+'" />'
+    +'<button type="button" class="del" title="Remove account" aria-label="Remove account">×</button></div>'
+    +'<div class="modebar"><span class="lbl">Detail level</span>'
+    +'<button type="button" class="modebtn m-simple">Total only</button>'
+    +'<button type="button" class="modebtn m-detail">Detailed</button></div>'
+    +'<div class="holdings"></div>'
+    +'<button type="button" class="addbtn h-add" style="margin-top:8px">+ Add holding</button>'
+    +'<div class="acctsum"></div></div>');
+  var hwrap=a.querySelector(".holdings");
+  (holdings&&holdings.length?holdings:[["",""]]).forEach(function(h){ hwrap.appendChild(holdingRow(h[0],h[1])); });
+  syncAcctMode(a);
+  return a;
+}
+function syncAcctMode(a){
+  var mode=a.dataset.mode;
+  a.querySelector(".m-simple").classList.toggle("on",mode==="simple");
+  a.querySelector(".m-detail").classList.toggle("on",mode==="detail");
+  a.querySelector(".holdings").classList.toggle("hidden",mode!=="detail");
+  a.querySelector(".h-add").classList.toggle("hidden",mode!=="detail");
+  a.querySelector(".a-total").classList.toggle("hidden",mode!=="simple");
+}
+function acctValue(a){
+  if(a.dataset.mode==="detail"){
+    var s=0; a.querySelectorAll(".h-val").forEach(function(i){ s+=parseNum(i); });
+    return s;
+  }
+  return parseNum(a.querySelector(".a-total"));
+}
+
+/* ---------- seed rows ---------- */
+var $=function(id){ return document.getElementById(id); };
+$("propRows").appendChild(propRow("","",""));
+$("acctRows").appendChild(acctRow("","Brokerage","","simple",null));
+$("debtRows").appendChild(simpleRow("","","Debt (e.g. car loan, credit card)") );
+
+/* ---------- events ---------- */
+document.addEventListener("input",function(){ recalc(); });
+document.addEventListener("change",function(){ recalc(); });
+document.addEventListener("focusout",function(e){
+  var t=e.target;
+  if(t.classList && t.classList.contains("money")){
+    var n=parseNum(t);
+    if(t.value.trim()!=="") t.value=fmt(n).replace("$","");
+  }
+});
+document.addEventListener("click",function(e){
+  var t=e.target;
+  if(t.classList.contains("del")){
+    var row=t.closest(".row,.hrow,.acct");
+    if(row){
+      var parent=row.parentElement;
+      row.remove();
+      if(parent && parent.id==="propRows" && !parent.children.length) parent.appendChild(propRow("","",""));
+      if(parent && parent.id==="debtRows" && !parent.children.length) parent.appendChild(simpleRow("","","Debt (e.g. car loan, credit card)"));
+      if(row.classList.contains("hrow")){
+        var hw=row.parentElement;
+        if(hw && !hw.children.length) hw.appendChild(holdingRow("",""));
+      }
+      recalc();
+    }
+    return;
+  }
+  if(t.classList.contains("addbtn") && t.dataset.add){
+    var kind=t.dataset.add;
+    if(kind==="otherincome") $("otherIncomeRows").appendChild(otherIncomeRow("",""));
+    if(kind==="property") $("propRows").appendChild(propRow("","",""));
+    if(kind==="debt") $("debtRows").appendChild(simpleRow("","","Debt (e.g. car loan, credit card)"));
+    if(kind==="account") $("acctRows").appendChild(acctRow("","Brokerage","","simple",null));
+    recalc();
+    return;
+  }
+  if(t.classList.contains("h-add")){
+    t.closest(".acct").querySelector(".holdings").appendChild(holdingRow("",""));
+    recalc(); return;
+  }
+  if(t.classList.contains("p-primary")){
+    var wasOn=t.classList.contains("on");
+    document.querySelectorAll("#propRows .p-primary").forEach(function(b){ b.classList.remove("on"); syncPrimaryPill(b); });
+    if(!wasOn){ t.classList.add("on"); syncPrimaryPill(t); }
+    recalc(); return;
+  }
+  var pickRow=t.closest? t.closest("tr.retpickrow") : null;
+  if(pickRow){ selectRetireYears(parseInt(pickRow.dataset.retpick,10)); return; }
+  if(t.classList.contains("segbtn") && t.dataset.rethome){
+    retHomeMode=t.dataset.rethome;
+    document.querySelectorAll("#retHomeSeg .segbtn").forEach(function(b){ b.classList.toggle("on", b===t); });
+    if(typeof renderRetirement==="function") renderRetirement();
+    return;
+  }
+  if(t.classList.contains("segbtn") && t.dataset.retss){
+    retSSMode=t.dataset.retss;
+    document.querySelectorAll("#retSSSeg .segbtn").forEach(function(b){ b.classList.toggle("on", b===t); });
+    if(typeof renderRetirement==="function") renderRetirement();
+    return;
+  }
+  if(t.classList.contains("modebtn")){
+    var ac=t.closest(".acct");
+    ac.dataset.mode=t.classList.contains("m-detail")?"detail":"simple";
+    syncAcctMode(ac); recalc(); return;
+  }
+});
+
+/* ---------- simulation (single source of truth for years + graph) ---------- */
+/* Buckets: invested (brokerage + other assets) grows at return, savings added yearly;
+   cash flat; property equity grows at appreciation; other liabilities flat. */
+function simulate(s, extraSave, years){
+  var inv=s.invested+s.otherAssets, eq=s.propEq, path=[s.nw];
+  for(var t=1;t<=years;t++){
+    inv=inv*(1+s.r)+(s.savings+extraSave);
+    eq=eq*(1+s.apprec);
+    path.push(inv+s.cash+eq-s.debts);
+  }
+  return path;
+}
+function crossingYears(path, thr0, barRate){
+  var prev=path[0]-thr0;
+  if(prev>=0) return 0;
+  for(var t=1;t<path.length;t++){
+    var bar=thr0*Math.pow(1+barRate,t);
+    var diff=path[t]-bar;
+    if(diff>=0){ return (t-1)+ prev/(prev-diff); }
+    prev=diff;
+  }
+  return null; /* never within the simulated horizon */
+}
+function extraSavingsForTargetYear(s, thr0, barRate, targetYears){
+  var barT=thr0*Math.pow(1+barRate,targetYears);
+  function nwAt(extra){ return simulate(s,extra,targetYears)[targetYears]; }
+  if(nwAt(0)>=barT) return 0;
+  var lo=0, hi=1000;
+  while(nwAt(hi)<barT && hi<5e7) hi*=2;
+  if(nwAt(hi)<barT) return null;
+  for(var i=0;i<50;i++){ var mid=(lo+hi)/2; if(nwAt(mid)>=barT) hi=mid; else lo=mid; }
+  return hi;
+}
+
+/* ---------- state ---------- */
+function readState(){
+  var income=parseNum($("incSalary"))+parseNum($("incBonus"))+parseNum($("incStock"));
+  document.querySelectorAll("#otherIncomeRows .row").forEach(function(row){ income+=parseNum(row.querySelector(".s-amt")); });
+  var taxRate=Math.min(90,Math.max(0,parseFloat($("taxRate").value)||0))/100;
+  var taxes=income*taxRate;
+  var expenses=parseNum($("expenses"));
+  var computedSavings=income-taxes-expenses;
+  var overrideOn=hasVal($("saveOverride"));
+  var savings=overrideOn? parseNum($("saveOverride")) : computedSavings;
+
+  var cash=parseNum($("cashField")), otherAssets=parseNum($("otherAssets"));
+  var propVal=0, propLoan=0, primaryEq=0, primaryName="", hasPrimary=false;
+  document.querySelectorAll("#propRows .row").forEach(function(row){
+    var v=parseNum(row.querySelector(".p-val")), l=parseNum(row.querySelector(".p-loan"));
+    propVal+=v; propLoan+=l;
+    var pill=row.querySelector(".p-primary");
+    if(pill && pill.classList.contains("on")){
+      hasPrimary=true; primaryEq+=(v-l);
+      var nm=row.querySelector(".p-name");
+      primaryName=(nm && nm.value.trim())? nm.value.trim() : "Primary home";
+    }
+    var eq=row.querySelector(".eq");
+    if(eq){ eq.innerHTML=(v||l)? ("Equity: <b>"+fmt(v-l)+"</b>") : ""; }
+  });
+  var invested=0;
+  document.querySelectorAll("#acctRows .acct").forEach(function(a){
+    var v=acctValue(a); invested+=v;
+    var sum=a.querySelector(".acctsum");
+    if(sum){
+      if(a.dataset.mode==="detail"){
+        var names=[];
+        a.querySelectorAll(".hrow").forEach(function(h){
+          var sv=parseNum(h.querySelector(".h-val")), sy=h.querySelector(".h-sym").value.trim();
+          if(sv>0 && v>0) names.push((sy||"Holding")+" "+Math.round(sv/v*100)+"%");
+        });
+        sum.innerHTML="Account total from holdings: <b>"+fmt(v)+"</b>"+(names.length?" · "+esc(names.join(" · ")):"");
+      } else sum.innerHTML="";
+    }
+  });
+  var debts=0;
+  document.querySelectorAll("#debtRows .row").forEach(function(row){ debts+=parseNum(row.querySelector(".s-amt")); });
+  var assets=cash+otherAssets+invested+propVal;
+  var liab=propLoan+debts;
+  return {
+    income:income, taxes:taxes, expenses:expenses, computedSavings:computedSavings,
+    overrideOn:overrideOn, savings:savings,
+    cash:cash, otherAssets:otherAssets, propVal:propVal, propLoan:propLoan, propEq:propVal-propLoan,
+    primaryEq:primaryEq, otherPropEq:(propVal-propLoan)-primaryEq, hasPrimary:hasPrimary, primaryName:primaryName,
+    invested:invested, debts:debts, assets:assets, liab:liab, nw:assets-liab,
+    r:(parseFloat($("aReturn").value)||0)/100,
+    apprec:(parseFloat($("aApprec").value)||0)/100,
+    barAdj:(parseFloat($("aBarAdj").value)||0)
+  };
+}
+
+/* ---------- main recalc ---------- */
+function recalc(){
+  var s=readState();
+  $("incomeTotal").textContent=fmt(s.income);
+  $("cashTotal").textContent=fmt(s.cash+s.otherAssets);
+  $("propTotal").textContent=fmt(s.propEq);
+  $("propSplit").textContent=s.hasPrimary? (fmt(s.primaryEq)+" / "+fmt(s.otherPropEq)) : "no primary marked";
+  $("acctTotal").textContent=fmt(s.invested);
+  $("debtTotal").textContent="−"+fmt(s.debts).replace("-","");
+
+  /* waterfall */
+  var base=Math.max(s.income, s.taxes+s.expenses, 1);
+  function wbar(id,vid,val,color){
+    var f=$(id); f.style.width=Math.max(0,Math.min(100,Math.abs(val)/base*100))+"%";
+    f.style.background=val<0? "var(--neg)" : color;
+    $(vid).textContent=fmt(val);
+  }
+  wbar("wfInc","wfIncV",s.income,"var(--accent)");
+  wbar("wfTax","wfTaxV",-s.taxes,"var(--neg)");
+  wbar("wfExp","wfExpV",-s.expenses,"var(--gold)");
+  wbar("wfSav","wfSavV",s.savings,"var(--accent)");
+  $("wfNote").textContent = s.overrideOn
+    ? "Using your manually entered savings of "+fmt(s.savings)+" for the projection (the flow above computes "+fmt(s.computedSavings)+")."
+    : (s.income>0 ? "Savings = "+fmt(s.income)+" income − "+fmt(s.taxes)+" taxes − "+fmt(s.expenses)+" expenses. This is what gets invested each year in the projection." : "");
+
+  var hasAny=(s.assets>0||s.liab>0||s.income>0);
+  $("stripNW").textContent=hasAny? fmt(s.nw) : "—";
+  if(!hasAny){
+    $("stripPct").textContent="—"; $("stripNext").textContent="—"; $("stripYears").textContent="—";
+    $("resEmpty").classList.remove("hidden"); $("resBody").classList.add("hidden");
+    ["resComp","resNext","resWhat","resLadder"].forEach(function(id){ $(id).classList.add("hidden"); });
+    $("heroVerdict").innerHTML='<span class="empty">Enter your numbers below and the race appears here.</span>';
+    $("heroChart").innerHTML="";
+    if(typeof syncMCStart==="function") syncMCStart(s);
+    if(typeof renderRetirement==="function") renderRetirement(s);
+    return;
+  }
+  $("resEmpty").classList.add("hidden"); $("resBody").classList.remove("hidden");
+  ["resComp","resNext","resWhat","resLadder"].forEach(function(id){ $(id).classList.remove("hidden"); });
+
+  var p=percentileOf(s.nw);
+  var pctTxt="≈ "+(p>=99.9? "99.9" : (Math.round(p*10)/10))+"th percentile — "+topLabel(p);
+  $("resNW").textContent=fmt(s.nw);
+  $("resPct").textContent=pctTxt;
+  $("resPctSub").textContent = s.nw<0
+    ? "Debts currently exceed assets — the climb starts with the first rung below. (Percentile is a log-linear estimate between published 2025 SCF rungs.)"
+    : "Estimate: log-linear interpolation between the published 2025 SCF rungs. Your household is wealthier than about "+(Math.round(p*10)/10)+" of every 100 U.S. households."+(p>=99? " Above the 99th rung the survey can only say “top 1%+” — the next target below is the highest published rung." : "");
+  $("resAssets").textContent=fmt(s.assets);
+  $("resDebts").textContent=fmt(s.liab);
+  $("resSave").textContent=fmt(s.savings)+"/yr";
+  $("resRate").textContent=s.income>0? Math.round(s.savings/s.income*100)+"%" : "—";
+  $("stripPct").innerHTML=esc(pctTxt.split(" — ")[0].replace("≈ ",""))+' <small>'+esc(topLabel(p))+'</small>';
+
+  /* composition */
+  var parts=[
+    {name:"Cash", val:s.cash, color:"#3e7cb1"},
+    {name:"Other assets", val:s.otherAssets, color:"#7a9e43"},
+    {name:"Investments", val:s.invested, color:"#0b6b4a"},
+    {name:"Property equity", val:Math.max(s.propEq,0), color:"#a86f0d"}
+  ];
+  var totParts=parts.reduce(function(a,b){ return a+Math.max(b.val,0); },0);
+  var barHtml="", listHtml="";
+  parts.forEach(function(pt){
+    var w=totParts>0? Math.max(pt.val,0)/totParts*100 : 0;
+    if(w>0) barHtml+='<div style="width:'+w+'%;background:'+pt.color+'"></div>';
+    if(pt.val!==0) listHtml+='<div class="ci"><span class="dot" style="background:'+pt.color+'"></span>'+esc(pt.name)+'<b class="mono">'+fmt(pt.val)+'</b></div>';
+  });
+  if(s.propEq<0) listHtml+='<div class="ci"><span class="dot" style="background:#b03527"></span>Property equity (underwater)<b class="mono">'+fmt(s.propEq)+'</b></div>';
+  if(s.liab>0) listHtml+='<div class="ci"><span class="dot" style="background:#b03527"></span>Total debts<b class="mono">−'+fmt(s.liab).replace("-","")+'</b></div>';
+  $("compBar").innerHTML=barHtml;
+  $("compList").innerHTML=listHtml;
+
+  /* milestones + the one simulation everything reads from */
+  var path=simulate(s,0,80);
+  var upcoming=MILESTONES.filter(function(m){ return thr(m)>s.nw; });
+  var ladderRows=upcoming.slice(0,5).map(function(m){
+    var t=thr(m), rate=barRatePct(m,s.barAdj)/100;
+    return {m:m, t:t, gap:t-s.nw, yrs:crossingYears(path,t,rate)};
+  });
+  var nextM=upcoming.length? upcoming[0] : null;
+
+  if(!nextM){
+    $("nextName").textContent="Top 0.1%";
+    $("nextGap").textContent="You are above every published threshold in the 2025 SCF table — "+fmt(s.nw-thr(99.9))+" above the top rung ("+fmt(thr(99.9))+").";
+    $("nextYears").innerHTML="There is no next rung on this ladder.";
+    $("stripNext").textContent="—"; $("stripYears").textContent="—";
+    $("ladderBody").innerHTML="";
+    $("wttNum").textContent="—";
+    $("wttText").textContent="No higher published rung to chase.";
+    $("heroVerdict").innerHTML='You are above the highest published rung — <span class="good">top 0.1%</span>.';
+    $("heroChart").innerHTML="";
+  } else {
+    var t0=thr(nextM), rate0=barRatePct(nextM,s.barAdj)/100, gap0=t0-s.nw;
+    var yrs0=crossingYears(path,t0,rate0);
+    var thisYear=new Date().getFullYear();
+    $("nextName").innerHTML=esc(rungName(nextM))+' <span>· '+fmt(t0)+'</span>';
+    $("nextGap").innerHTML="You need <b>"+fmt(gap0)+"</b> more than you have today — but the bar rises at <b>"+(Math.round(rate0*1000)/10)+"%/yr</b>, so the real target keeps moving.";
+    if(yrs0===null){
+      var blended = s.nw>0? ((s.invested+s.otherAssets)*s.r + s.propEq*s.apprec)/s.nw : s.r;
+      $("nextYears").innerHTML="<b>Not on the current path.</b> Within 80 years your projected net worth never catches a bar rising at "+(Math.round(rate0*1000)/10)+"%/yr: your money compounds at about "+(Math.round(blended*1000)/10)+"% blended (invested assets at "+(Math.round(s.r*1000)/10)+"%, property equity at "+(Math.round(s.apprec*1000)/10)+"%, cash at 0%), and saving "+fmt(s.savings)+"/yr adds too little to close a "+fmt(gap0)+" gap against that slope. The lever is the savings figure — see “What it would take.”";
+      $("stripYears").innerHTML='<small>not on path</small>';
+    } else {
+      var barThen=t0*Math.pow(1+rate0,yrs0);
+      $("nextYears").innerHTML="At your current pace you cross in about <b>"+fmtYears(yrs0)+"</b> (around "+Math.floor(thisYear+yrs0)+"), when the bar itself will have climbed to roughly <b>"+fmt(barThen)+"</b>.";
+      $("stripYears").textContent=fmtYears(yrs0);
+    }
+    $("stripNext").innerHTML=esc(rungName(nextM))+' <small>'+fmtShort(t0)+'</small>';
+    $("ladderBody").innerHTML=ladderRows.map(function(rw){
+      return "<tr><td><b>"+esc(rungName(rw.m))+"</b></td><td class='r mono'>"+fmt(rw.t)+"</td><td class='r mono'>"+fmt(rw.gap)+"</td><td class='r mono'>"+(rw.yrs===null?"—":fmtYears(rw.yrs))+"</td></tr>";
+    }).join("");
+
+    var extra10=extraSavingsForTargetYear(s,t0,rate0,10);
+    if(extra10===null){
+      $("wttNum").textContent="—";
+      $("wttText").textContent="No plausible savings figure reaches "+rungName(nextM)+" within 10 years from here.";
+    } else if(extra10<=0){
+      $("wttNum").textContent="$0 extra";
+      $("wttText").textContent="You are already on pace to reach "+rungName(nextM)+" within 10 years at your current savings — no extra saving needed.";
+    } else {
+      $("wttNum").textContent="+"+fmt(extra10)+"/yr";
+      $("wttText").textContent="Save this much <i>more</i> each year (on top of your current "+fmt(s.savings)+"/yr) and you reach "+rungName(nextM)+" in exactly 10 years, around "+(thisYear+10)+", even with the bar rising at "+(Math.round(rate0*1000)/10)+"%/yr.";
+    }
+    drawHero(s,path,nextM,t0,rate0,yrs0);
+  }
+  drawLadder(s);
+  if(typeof syncMCStart==="function") syncMCStart(s);
+  if(typeof renderRetirement==="function") renderRetirement(s);
+}
+
+/* ---------- hero chart: projected NW vs the next bar ---------- */
+function drawHero(s,path,nextM,t0,rate0,yrs0){
+  var box=$("heroChart");
+  $("heroLegendBar").textContent="The "+rungName(nextM)+" bar ("+fmt(t0)+" today, rising "+(Math.round(rate0*1000)/10)+"%/yr)";
+  var thisYear=new Date().getFullYear();
+  if(yrs0!==null){
+    $("heroVerdict").innerHTML='You reach <span class="good">'+esc(rungName(nextM))+'</span> in about <span class="good">'+fmtYears(yrs0)+'</span> — around <span class="good">'+Math.floor(thisYear+yrs0)+'</span> — if you keep saving '+fmt(s.savings)+' a year.';
+  } else {
+    $("heroVerdict").innerHTML='On the current path the '+esc(rungName(nextM))+' bar <span class="bad">does not cross</span> — it rises at '+(Math.round(rate0*1000)/10)+'%/yr and pulls away. Raising your annual savings is what bends your line up.';
+  }
+  if(s.nw<=0){
+    box.innerHTML='<p class="empty">The race chart draws once net worth is positive — right now debts exceed assets, so the first goal is getting above zero.</p>';
+    return;
+  }
+  var H = (yrs0!==null && yrs0<=50)? Math.min(50,Math.ceil(yrs0)+3) : 50;
+  var you=[], bar=[];
+  for(var t=0;t<=H;t++){ you.push(path[t]); bar.push(t0*Math.pow(1+rate0,t)); }
+  var lo=Math.min(s.nw,t0)*0.85, hi=Math.max(you[H],bar[H])*1.08;
+  var llo=Math.log10(Math.max(lo,1)), lhi=Math.log10(Math.max(hi,10));
+  var W=720,Hg=300,pl=14,pr=110,pt=16,pb=26;
+  function X(t){ return pl+(t/H)*(W-pl-pr); }
+  function Y(v){ return pt+(1-(Math.log10(Math.max(v,1))-llo)/(lhi-llo))*(Hg-pt-pb); }
+  var ticks=[1e4,3e4,1e5,3e5,1e6,3e6,1e7,3e7,1e8,3e8,1e9].filter(function(v){ return v>=Math.pow(10,llo)&&v<=Math.pow(10,lhi); });
+  var svg='<svg viewBox="0 0 '+W+' '+Hg+'" role="img" aria-label="Projected net worth versus the next percentile bar, year by year">';
+  ticks.forEach(function(v){
+    svg+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-width="1"/>'
+      +'<text x="'+(pl+2)+'" y="'+(Y(v)-4)+'" font-size="11" fill="var(--faint)" font-family="IBM Plex Mono,monospace">'+fmtShort(v)+'</text>';
+  });
+  var step=H>30?10:5;
+  for(var xt=0;xt<=H;xt+=step){
+    var anch = xt===0? "start" : (xt===H? "end" : "middle");
+    svg+='<text x="'+X(xt)+'" y="'+(Hg-6)+'" font-size="11" fill="var(--faint)" text-anchor="'+anch+'">'+(thisYear+xt)+'</text>';
+  }
+  function pth(arr){ return arr.map(function(v,i){ return (i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1); }).join(" "); }
+  svg+='<path d="'+pth(bar)+'" fill="none" stroke="var(--gold)" stroke-width="3"/>';
+  svg+='<path d="'+pth(you)+'" fill="none" stroke="var(--accent)" stroke-width="3"/>';
+  if(yrs0!==null && yrs0<=H){
+    var cx=X(yrs0), cy=Y(t0*Math.pow(1+rate0,yrs0));
+    svg+='<circle cx="'+cx+'" cy="'+cy+'" r="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.5"/>';
+    var cyy = cy<44? cy+24 : cy-12;
+    if(cx>W-320){
+      svg+='<text x="'+(cx-12)+'" y="'+cyy+'" font-size="13" font-weight="800" fill="var(--ink)" text-anchor="end">crossing · '+fmtYears(yrs0)+' · '+(Math.floor(thisYear+yrs0))+'</text>';
+    } else {
+      svg+='<text x="'+(cx+10)+'" y="'+cyy+'" font-size="13" font-weight="800" fill="var(--ink)">crossing · '+fmtYears(yrs0)+' · '+(Math.floor(thisYear+yrs0))+'</text>';
+    }
+  }
+  if(yrs0!==null && yrs0>H){
+    svg+='<text x="'+(W-pr)+'" y="'+(pt+4)+'" font-size="12" font-weight="700" fill="var(--ink)" text-anchor="end">crossing at '+fmtYears(yrs0)+' is beyond this 50-yr chart</text>';
+  }
+  if(yrs0===null){
+    svg+='<text x="'+(W-pr)+'" y="'+(pt+4)+'" font-size="12.5" font-weight="700" fill="var(--neg)" text-anchor="end">does not cross on the current path</text>';
+  }
+  var yYou=Y(you[H]), yBar=Y(bar[H]);
+  if(Math.abs(yYou-yBar)<20){
+    if(yYou<=yBar){ yYou-=11; yBar+=13; } else { yBar-=11; yYou+=13; }
+  }
+  svg+='<text x="'+(W-pr+8)+'" y="'+(yYou+4)+'" font-size="12.5" font-weight="700" fill="var(--accent)">you '+fmtShort(you[H])+'</text>';
+  svg+='<text x="'+(W-pr+8)+'" y="'+(yBar+4)+'" font-size="12.5" font-weight="700" fill="var(--gold)">bar '+fmtShort(bar[H])+'</text>';
+  svg+="</svg>";
+  box.innerHTML=svg;
+}
+
+/* ---------- ladder chart ---------- */
+function drawLadder(s){
+  var box=$("ladderChart");
+  var marks=[50,75,90,95,99];
+  var W=360,H=118,pl=10,pr=10,pt=16,pb=30;
+  var llo=Math.log10(1e4), lhi=Math.log10(1e8);
+  function X(v){ var lv=Math.log10(Math.min(Math.max(v,1e4),1e8)); return pl+(lv-llo)/(lhi-llo)*(W-pl-pr); }
+  var axisY=H-pb;
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Percentile ladder on a log scale">';
+  svg+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+axisY+'" y2="'+axisY+'" stroke="var(--line-strong)" stroke-width="1.5"/>';
+  [1e4,1e5,1e6,1e7,1e8].forEach(function(v){
+    svg+='<line x1="'+X(v)+'" x2="'+X(v)+'" y1="'+(axisY-4)+'" y2="'+(axisY+4)+'" stroke="var(--line-strong)"/>'
+      +'<text x="'+X(v)+'" y="'+(H-8)+'" font-size="9.5" fill="var(--faint)" text-anchor="middle" font-family="IBM Plex Mono,monospace">'+fmtShort(v)+'</text>';
+  });
+  marks.forEach(function(m,i){
+    var v=thr(m), x=X(v), ly=i%2? axisY-34 : axisY-52;
+    svg+='<line x1="'+x+'" x2="'+x+'" y1="'+(axisY-5)+'" y2="'+(ly+10)+'" stroke="var(--line-strong)" stroke-dasharray="2 2"/>'
+      +'<circle cx="'+x+'" cy="'+axisY+'" r="4" fill="var(--gold)"/>'
+      +'<text x="'+x+'" y="'+ly+'" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="middle">'+esc(rungName(m))+'</text>'
+      +'<text x="'+x+'" y="'+(ly+11)+'" font-size="9" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">'+fmtShort(v)+'</text>';
+  });
+  if(s.nw>0){
+    var yx=X(s.nw);
+    svg+='<line x1="'+yx+'" x2="'+yx+'" y1="'+pt+'" y2="'+axisY+'" stroke="var(--accent)" stroke-width="2.5"/>'
+      +'<text x="'+yx+'" y="'+(pt-3)+'" font-size="10.5" font-weight="800" fill="var(--accent)" text-anchor="middle">YOU · '+fmtShort(s.nw)+'</text>';
+  }
+  svg+="</svg>";
+  box.innerHTML=svg;
+}
+
+/* ---------- sample / clear ---------- */
+function setRows(id,rows){ var c=$(id); c.innerHTML=""; rows.forEach(function(r){ c.appendChild(r); }); }
+function fmtField(elm,val){ elm.value=val; elm.dispatchEvent(new Event("focusout",{bubbles:true})); }
+$("btnSample").addEventListener("click",function(){
+  $("sampleBubble").classList.add("hidden");
+  fmtField($("incSalary"),"285000");
+  fmtField($("incBonus"),"45000");
+  $("incStockLabel").value="ACME — employer RSUs";
+  fmtField($("incStock"),"92000");
+  setRows("otherIncomeRows",[]);
+  $("taxRate").value="33";
+  fmtField($("expenses"),"238000");
+  $("saveOverride").value="";
+  fmtField($("cashField"),"82500");
+  $("otherAssets").value="";
+  setRows("propRows",[
+    propRow("Primary home","1185000","642000",true),
+    propRow("Rental condo","865000","598000",false)
+  ]);
+  setRows("acctRows",[
+    acctRow("Fidelity 401(k)","401(k)","","detail",[["Total US market fund","412000"],["Intl index","88000"]]),
+    acctRow("Brokerage","Brokerage","","detail",[["VOO","388000"],["GOOGL","1210000"],["AAPL","704000"],["Cash sweep","31000"]]),
+    acctRow("Roth IRA","Roth IRA","96500","simple",null)
+  ]);
+  setRows("debtRows",[
+    simpleRow("Car loan","27400","Debt (e.g. car loan, credit card)"),
+    simpleRow("Credit cards","5900","Debt (e.g. car loan, credit card)")
+  ]);
+  document.querySelectorAll(".money").forEach(function(m){ if(m.value.trim()!=="") m.value=fmt(parseNum(m)).replace("$",""); });
+  recalc();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("btnClear").addEventListener("click",function(){
+  ["incSalary","incBonus","incStock","incStockLabel","expenses","saveOverride","cashField","otherAssets"].forEach(function(id){ $(id).value=""; });
+  $("taxRate").value="33";
+  setRows("otherIncomeRows",[]);
+  setRows("propRows",[propRow("","","")]);
+  setRows("acctRows",[acctRow("","Brokerage","","simple",null)]);
+  setRows("debtRows",[simpleRow("","","Debt (e.g. car loan, credit card)")]);
+  recalc();
+});
+
+/* ---------- Tabs ---------- */
+var mcHasRun=false, mcDebounce=null;
+function switchTab(name){
+  var isMC = name==="montecarlo", isRet = name==="retirement";
+  $("tab-calculator").classList.toggle("hidden", isMC||isRet);
+  $("tab-montecarlo").classList.toggle("hidden", !isMC);
+  $("tab-retirement").classList.toggle("hidden", !isRet);
+  $("tabBtnCalc").setAttribute("aria-selected", (!isMC&&!isRet)?"true":"false");
+  $("tabBtnMC").setAttribute("aria-selected", isMC?"true":"false");
+  $("tabBtnRet").setAttribute("aria-selected", isRet?"true":"false");
+  if(isMC){
+    syncMCStart(readState());
+    if(!mcHasRun){
+      var s=readState();
+      if(s.assets>0||s.liab>0||s.income>0) runMonteCarlo();
+    }
+  }
+  if(isRet && typeof renderRetirement==="function") renderRetirement();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll(".tabbtn").forEach(function(b){
+  b.addEventListener("click",function(){ switchTab(b.dataset.tab); });
+});
+$("mcVol").addEventListener("input",function(){ $("mcVolLabel").textContent=$("mcVol").value+"% / yr"; scheduleMCRerun(); });
+$("retYears").addEventListener("input",function(){ var n=parseInt($("retYears").value,10)||0; $("retYearsLabel").textContent=n+(n===1?" year":" years"); if(typeof renderRetirement==="function") renderRetirement(); });
+$("mcSims").addEventListener("change",function(){ scheduleMCRerun(); });
+function scheduleMCRerun(){
+  if($("tab-montecarlo").classList.contains("hidden")) return;
+  if(!mcHasRun) return;
+  clearTimeout(mcDebounce);
+  mcDebounce=setTimeout(function(){ runMonteCarlo(); },600);
+}
+/* Auto-rerun (debounced) when Tab 1 inputs change while Tab 2 is open */
+document.addEventListener("input",function(e){
+  if(e.target && e.target.id==="mcVol") return;
+  scheduleMCRerun();
+});
+
+/* ---------- Monte Carlo ---------- */
+function syncMCStart(s){
+  if(!s) s=readState();
+  var has=(s.assets>0||s.liab>0||s.income>0);
+  $("mcStartNW").textContent=has? fmt(s.nw) : "— enter data in Tab 1";
+  $("mcStartAssump").textContent=has? ((Math.round(s.r*1000)/10)+"% return · "+fmt(s.savings)+"/yr saved") : "—";
+}
+function randn(){
+  var u=0,v=0;
+  while(u===0) u=Math.random();
+  while(v===0) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function quantile(sorted,q){
+  if(!sorted.length) return 0;
+  var idx=(sorted.length-1)*q, lo=Math.floor(idx), hi=Math.ceil(idx);
+  if(lo===hi) return sorted[lo];
+  return sorted[lo]+(sorted[hi]-sorted[lo])*(idx-lo);
+}
+function topPctForNWAtYear(nw, years, barAdj){
+  var g=Math.pow(1+(BAR_BASE+barAdj)/100, years);
+  var equiv=g>0? nw/g : nw;
+  var p=percentileOf(equiv);
+  return Math.round((100-p)*10)/10;
+}
+function runMonteCarlo(){
+  var s=readState();
+  var has=(s.assets>0||s.liab>0||s.income>0);
+  if(!has){
+    $("mcVerdict").innerHTML='<span style="color:var(--neg)">No data yet.</span> Go to Tab 1, enter your numbers or load the sample household, then come back and run again.';
+    return;
+  }
+  var H=40; /* fan chart and simulation horizon: 40 years; headline stats at 10/20/30 */
+  var N=parseInt($("mcSims").value,10)||2000;
+  var vol=Math.max(5,Math.min(30,parseFloat($("mcVol").value)||15))/100;
+  var mean=s.r;
+  var thisYear=new Date().getFullYear();
+
+  var byYear=[]; for(var t=0;t<=H;t++) byYear.push([]);
+  /* Store all paths only as yearly arrays + ever-reach tracking */
+  var oddsRungs=[90,93,95,97,98,99]; /* Top 10%, 7%, 5%, 3%, 2%, 1% */
+  var ever={}; oddsRungs.forEach(function(m){ ever[m]={10:0,20:0,30:0}; });
+  var finals30=[];
+  for(var i=0;i<N;i++){
+    var inv=s.invested+s.otherAssets, eq=s.propEq;
+    var reached={}; oddsRungs.forEach(function(m){ reached[m]=false; });
+    byYear[0].push(s.nw);
+    for(var tt=1; tt<=H; tt++){
+      var r = mean + vol*randn();
+      if(r<-0.95) r=-0.95;
+      inv = inv*(1+r) + s.savings;
+      eq = eq*(1+s.apprec);
+      var nw = inv + s.cash + eq - s.debts;
+      byYear[tt].push(nw);
+      if(tt===30) finals30.push(nw);
+      /* ever-reach check against the bar in that same year */
+      if(tt===10||tt===20||tt===30){
+        oddsRungs.forEach(function(m){
+          if(!reached[m]){
+            var rate=barRatePct(m,s.barAdj)/100;
+            /* check every year up to tt would be ideal; we approximate by tracking continuously below */
+          }
+        });
+      }
+      oddsRungs.forEach(function(m){
+        if(!reached[m]){
+          var rate2=barRatePct(m,s.barAdj)/100;
+          var barNow=thr(m)*Math.pow(1+rate2,tt);
+          if(nw>=barNow) reached[m]=tt;
+        }
+      });
+      if(tt===10||tt===20||tt===30){
+        oddsRungs.forEach(function(m){
+          if(reached[m] && reached[m]<=tt) ever[m][tt]++;
+        });
+      }
+    }
+  }
+  function statsAt(y){
+    var sorted=byYear[y].slice().sort(function(a,b){return a-b;});
+    return {med:quantile(sorted,0.5), p10:quantile(sorted,0.1), p90:quantile(sorted,0.9), sorted:sorted};
+  }
+  var s10=statsAt(10), s20=statsAt(20), s30=statsAt(30);
+  $("mcMed10").textContent=fmt(s10.med); $("mcRange10").textContent="10th–90th: "+fmt(s10.p10)+" – "+fmt(s10.p90);
+  $("mcMed20").textContent=fmt(s20.med); $("mcRange20").textContent="10th–90th: "+fmt(s20.p10)+" – "+fmt(s20.p90);
+  $("mcMed30").textContent=fmt(s30.med); $("mcRange30").textContent="10th–90th: "+fmt(s30.p10)+" – "+fmt(s30.p90);
+  $("mcSummarySub").textContent=N.toLocaleString()+" simulated futures over 40 years · mean return "+(Math.round(mean*1000)/10)+"% · volatility "+(Math.round(vol*1000)/10)+"% · saving "+fmt(s.savings)+"/yr. Medians deflate the bars for the verdict below.";
+
+  /* Odds table */
+  var html='<table class="odds"><thead><tr><th>Rung</th><th>in 10 yrs</th><th>in 20 yrs</th><th>in 30 yrs</th></tr></thead><tbody>';
+  oddsRungs.forEach(function(m){
+    function cell(y){
+      var pct=ever[m][y]/N*100;
+      return '<td><span class="mono" style="font-weight:700">'+(Math.round(pct*10)/10)+'%</span><div class="barwrap"><div class="barfill" style="width:'+Math.max(pct,0.5)+'%"></div></div></td>';
+    }
+    html+='<tr><td><b>'+esc(rungName(m))+'</b><div style="font-size:12px;color:var(--faint)">bar today '+fmt(thr(m))+'</div></td>'+cell(10)+cell(20)+cell(30)+'</tr>';
+  });
+  html+='</tbody></table><p style="font-size:12.5px;color:var(--faint);margin-top:8px">“Ever reach” counts a future if it touches the rung at any year up to that point, even if it later falls back — bars rise each year at their documented rates.</p>';
+  $("mcProbs").innerHTML=html;
+
+  /* Rungs for fan chart */
+  var upcoming=MILESTONES.filter(function(m){ return thr(m)>s.nw; });
+  var nextM=upcoming.length? upcoming[0]:null;
+  var below=MILESTONES.filter(function(m){ return thr(m)<=s.nw; });
+  var currM=below.length? below[below.length-1]:null;
+
+  /* Verdict in the spec's plain language */
+  var probTop2_30 = ever[98][30]/N*100;
+  var medianTop30 = topPctForNWAtYear(s30.med,30,s.barAdj);
+  if(s.nw<=0){
+    $("mcVerdict").innerHTML='<span style="color:var(--neg)">Net worth is not positive yet,</span> so the fan chart cannot draw on a log scale — but the odds above still run. In '+N.toLocaleString()+' simulated futures, you reach the top 2% at any point within 30 years in about <span class="good">'+(Math.round(probTop2_30*10)/10)+'%</span> of them; the median future at 30 years is '+fmt(s30.med)+'.';
+  } else {
+    $("mcVerdict").innerHTML='In '+N.toLocaleString()+' simulated futures, you reach the <span class="good">top 2%</span> in about <span class="good">'+(Math.round(probTop2_30*10)/10)+'%</span> of them (at any point within 30 years); the median future lands in the <span class="good">top ~'+medianTop30+'%</span> — '+fmt(s30.med)+' at year 30, with a 10th–90th range of '+fmt(s30.p10)+' to '+fmt(s30.p90)+'.';
+  }
+  if(nextM) $("mcFanBarLabel").textContent="Next rung: "+rungName(nextM)+" bar";
+  if(currM) $("mcFanCurrLabel").textContent="Current rung: "+rungName(currM)+" bar"; else $("mcFanCurrLabel").textContent="Current rung bar";
+
+  drawMCFan(byYear,H,nextM,currM,s);
+  var sorted30=finals30.slice().sort(function(a,b){return a-b;});
+  drawMCHist(sorted30,nextM,30,s);
+  mcHasRun=true;
+}
+function drawMCFan(byYear,H,nextM,currM,s){
+  var box=$("mcFanChart");
+  if(s.nw<=0){ box.innerHTML='<p class="empty">Fan chart appears once net worth is positive.</p>'; return; }
+  var bands=byYear.map(function(arr){
+    var sorted=arr.slice().sort(function(a,b){return a-b;});
+    return {p10:quantile(sorted,0.1),p25:quantile(sorted,0.25),p50:quantile(sorted,0.5),p75:quantile(sorted,0.75),p90:quantile(sorted,0.9)};
+  });
+  var thisYear=new Date().getFullYear();
+  var allVals=[]; bands.forEach(function(b){ allVals.push(b.p10,b.p90); });
+  var lo=Math.min.apply(null,allVals.concat([s.nw]))*0.9;
+  var hi=Math.max.apply(null,allVals)*1.08;
+  function barSeries(m){
+    if(!m) return null;
+    var rate=barRatePct(m,s.barAdj)/100, t0=thr(m), arr=[];
+    for(var t=0;t<=H;t++) arr.push(t0*Math.pow(1+rate,t));
+    return arr;
+  }
+  var barArr=barSeries(nextM), currArr=barSeries(currM);
+  if(barArr){ hi=Math.max(hi,barArr[H]*1.05); lo=Math.min(lo,thr(nextM)*0.9); }
+  if(currArr){ lo=Math.min(lo,currArr[0]*0.9); }
+  lo=Math.max(lo,100);
+  var llo=Math.log10(lo), lhi=Math.log10(Math.max(hi,lo*10));
+  var W=720,Hg=320,pl=14,pr=118,pt=16,pb=28;
+  function X(t){ return pl+(t/H)*(W-pl-pr); }
+  function Y(v){ return pt+(1-(Math.log10(Math.max(v,1))-llo)/(lhi-llo))*(Hg-pt-pb); }
+  function lineFromArr(arr){ return arr.map(function(v,i){ return (i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1); }).join(" "); }
+  function line(key){ return bands.map(function(b,i){ return (i?"L":"M")+X(i).toFixed(1)+" "+Y(b[key]).toFixed(1); }).join(" "); }
+  function area(topKey,botKey){
+    var top=bands.map(function(b,i){ return (i?"L":"M")+X(i).toFixed(1)+" "+Y(b[topKey]).toFixed(1); }).join(" ");
+    var bot=""; for(var i=bands.length-1;i>=0;i--){ bot+="L"+X(i).toFixed(1)+" "+Y(bands[i][botKey]).toFixed(1)+" "; }
+    return top+" "+bot+" Z";
+  }
+  var ticks=[1e4,3e4,1e5,3e5,1e6,3e6,1e7,3e7,1e8,3e8,1e9].filter(function(v){ return v>=Math.pow(10,llo)&&v<=Math.pow(10,lhi); });
+  var svg='<svg viewBox="0 0 '+W+' '+Hg+'" role="img" aria-label="Monte Carlo fan chart of projected net worth over 40 years">';
+  ticks.forEach(function(v){
+    svg+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/>'
+      +'<text x="'+(pl+2)+'" y="'+(Y(v)-4)+'" font-size="11" fill="var(--faint)" font-family="IBM Plex Mono,monospace">'+fmtShort(v)+'</text>';
+  });
+  for(var xt=0;xt<=H;xt+=10){
+    var anch=xt===0?"start":(xt===H?"end":"middle");
+    svg+='<text x="'+X(xt)+'" y="'+(Hg-6)+'" font-size="11" fill="var(--faint)" text-anchor="'+anch+'">'+(thisYear+xt)+'</text>';
+  }
+  svg+='<path d="'+area("p90","p10")+'" fill="var(--track)" opacity="0.9" stroke="none"/>';
+  svg+='<path d="'+area("p75","p25")+'" fill="#9ecbb6" opacity="0.55" stroke="none"/>';
+  if(currArr) svg+='<path d="'+lineFromArr(currArr)+'" fill="none" stroke="var(--faint)" stroke-width="2" stroke-dasharray="6 4"/>';
+  if(barArr) svg+='<path d="'+lineFromArr(barArr)+'" fill="none" stroke="var(--gold)" stroke-width="3"/>';
+  svg+='<path d="'+line("p50")+'" fill="none" stroke="var(--accent)" stroke-width="3"/>';
+  var last=bands[H];
+  svg+='<text x="'+(W-pr+8)+'" y="'+(Y(last.p90)+4)+'" font-size="12" font-weight="700" fill="var(--muted)">90th '+fmtShort(last.p90)+'</text>';
+  svg+='<text x="'+(W-pr+8)+'" y="'+(Y(last.p50)+4)+'" font-size="12.5" font-weight="800" fill="var(--accent)">median '+fmtShort(last.p50)+'</text>';
+  svg+='<text x="'+(W-pr+8)+'" y="'+(Y(last.p10)+4)+'" font-size="12" font-weight="700" fill="var(--muted)">10th '+fmtShort(last.p10)+'</text>';
+  if(barArr) svg+='<text x="'+(W-pr+8)+'" y="'+(Y(barArr[H])+4)+'" font-size="12" font-weight="700" fill="var(--gold)">next bar '+fmtShort(barArr[H])+'</text>';
+  if(currArr) svg+='<text x="'+(W-pr+8)+'" y="'+(Y(currArr[H])+4)+'" font-size="11.5" font-weight="600" fill="var(--faint)">curr. bar '+fmtShort(currArr[H])+'</text>';
+  svg+="</svg>";
+  box.innerHTML=svg;
+}
+function drawMCHist(sortedFinals,nextM,H,s){
+  var box=$("mcHist");
+  var n=sortedFinals.length;
+  var lo=quantile(sortedFinals,0.02), hi=quantile(sortedFinals,0.98);
+  if(hi<=lo){ hi=lo+1; }
+  var pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
+  var BINS=22, counts=[]; for(var bi=0;bi<BINS;bi++) counts.push(0);
+  sortedFinals.forEach(function(v){
+    var idx=Math.floor((v-lo)/(hi-lo)*BINS);
+    if(idx<0) idx=0; if(idx>=BINS) idx=BINS-1;
+    counts[idx]++;
+  });
+  var maxC=Math.max.apply(null,counts);
+  var W=720,Hg=220,pl=14,pr=14,pt=14,pb=30;
+  var cw=(W-pl-pr)/BINS;
+  var svg='<svg viewBox="0 0 '+W+' '+Hg+'" role="img" aria-label="Histogram of simulated net worth at 30 years">';
+  for(var i=0;i<BINS;i++){
+    var h=(counts[i]/maxC)*(Hg-pt-pb);
+    var x=pl+i*cw, y=Hg-pb-h;
+    svg+='<rect x="'+(x+1)+'" y="'+y+'" width="'+(cw-2)+'" height="'+h+'" rx="3" fill="var(--accent)" opacity="0.88"/>';
+    if(i%4===0){
+      var val=lo+i*(hi-lo)/BINS;
+      svg+='<text x="'+x+'" y="'+(Hg-8)+'" font-size="10.5" fill="var(--faint)" font-family="IBM Plex Mono,monospace">'+fmtShort(val)+'</text>';
+    }
+  }
+  if(nextM){
+    var rate=barRatePct(nextM,s.barAdj)/100;
+    var barH=thr(nextM)*Math.pow(1+rate,H);
+    if(barH>=lo && barH<=hi){
+      var bx=pl+(barH-lo)/(hi-lo)*(W-pl-pr);
+      svg+='<line x1="'+bx+'" x2="'+bx+'" y1="'+pt+'" y2="'+(Hg-pb)+'" stroke="var(--gold)" stroke-width="3"/>'
+        +'<text x="'+bx+'" y="'+(pt-2)+'" font-size="11.5" font-weight="800" fill="var(--gold)" text-anchor="middle">'+esc(rungName(nextM))+' bar '+fmtShort(barH)+'</text>';
+    }
+    $("mcHistNote").textContent="Gold line: the "+rungName(nextM)+" bar at year 30 ("+fmt(barH)+"). Median "+fmt(quantile(sortedFinals,0.5))+" across "+n.toLocaleString()+" paths at year 30.";
+  } else {
+    $("mcHistNote").textContent="Median "+fmt(quantile(sortedFinals,0.5))+" across "+n.toLocaleString()+" paths at year 30.";
+  }
+  svg+="</svg>";
+  box.innerHTML=svg;
+}
+$("btnRunMC").addEventListener("click",runMonteCarlo);
+
+/* ---------- Tab 3: Retirement ---------- */
+var retHomeMode="keep", retSSMode="est", retCompareHTML="", retYearHTML="";
+function retPctVal(id, fb){ var e=$(id); if(!e||e.value==="") return fb; var v=parseFloat(e.value); return isNaN(v)? fb : v/100; }
+function retIntVal(id, fb){ var e=$(id); if(!e||e.value==="") return fb; var v=parseInt(e.value,10); return isNaN(v)? fb : v; }
+function ssClaimFactor(claim){
+  var FRA=67;
+  if(claim<FRA){ var m=(FRA-claim)*12; var red=Math.min(m,36)*(5/9/100)+Math.max(0,m-36)*(5/12/100); return 1-red; }
+  return 1+Math.min((claim-FRA)*12,36)*(2/3/100);
+}
+function ssEstimate(s,R,claimAge,yearsWorked){
+  var capped=Math.min(Math.max(s.income,0),184500);
+  var counted=Math.min(35, Math.max(0,yearsWorked)+Math.max(0,R));
+  var aime=counted>0? capped*counted/35/12 : 0;
+  var pia=0.9*Math.min(aime,1286)+(aime>1286? 0.32*(Math.min(aime,7749)-1286):0)+(aime>7749? 0.15*(aime-7749):0);
+  var f=ssClaimFactor(claimAge);
+  return {monthly:pia*f, pia:pia, aime:aime, counted:counted, capped:capped, factor:f};
+}
+function buildRetOpts(s){
+  var R=Math.max(0,Math.min(30,retIntVal("retYears",10)));
+  var ageRaw=$("retAge").value; var age=(ageRaw===""||isNaN(parseInt(ageRaw,10)))? null : Math.max(18,Math.min(90,parseInt(ageRaw,10)));
+  var expToday=hasVal($("retExpOverride"))? parseNum($("retExpOverride")) : s.expenses;
+  var infl=retPctVal("retInfl",0.03);
+  var postR=retPctVal("retPostReturn", s.r);
+  var cola=retPctVal("retCola",0.025);
+  var claimAge=Math.max(62,Math.min(70,retIntVal("retSSClaimAge",67)));
+  var yearsWorked=hasVal($("retSSYearsWorked"))? Math.max(0,parseInt($("retSSYearsWorked").value,10)||0) : (age!==null? Math.max(0,age-22) : 25);
+  var est=ssEstimate(s,R,claimAge,yearsWorked);
+  var ssMonthly=0;
+  if(retSSMode==="est") ssMonthly=est.monthly;
+  else if(retSSMode==="manual") ssMonthly=parseNum($("retSSManual"));
+  var spouse=parseNum($("retSSSpouse"));
+  ssMonthly+=spouse;
+  var ssStartT=(age!==null)? Math.max(0,claimAge-age) : R;
+  var otherMonthly=parseNum($("retOtherInc"));
+  var otherStartGiven=hasVal($("retOtherIncStart"));
+  var otherStartT=otherStartGiven? Math.max(0,parseInt($("retOtherIncStart").value,10)||0) : R;
+  return {R:R, age:age, expToday:expToday, infl:infl, postR:postR, cola:cola,
+    homeMode:retHomeMode, countOther:$("retCountOther").checked,
+    ssMonthly:ssMonthly, ssOwnMonthly:ssMonthly-spouse, spouse:spouse, claimAge:claimAge, ssStartT:ssStartT, est:est, yearsWorked:yearsWorked,
+    otherMonthly:otherMonthly, otherStartT:otherStartT, otherStartGiven:otherStartGiven};
+}
+function computeRetirement(s,o){
+  var R=o.R, inv=s.invested+s.otherAssets, prim=s.primaryEq, oth=s.otherPropEq;
+  function poolDisp(){ return inv+s.cash-s.debts+(o.countOther?oth:0)+(o.homeMode==="sell"?prim:0); }
+  var series=[{t:0,pool:poolDisp(),home:(o.homeMode==="last"?prim:0)}];
+  for(var t=1;t<=R;t++){
+    inv=inv*(1+s.r)+s.savings; prim=prim*(1+s.apprec); oth=oth*(1+s.apprec);
+    series.push({t:t,pool:poolDisp(),home:(o.homeMode==="last"?prim:0)});
+  }
+  var A=inv+s.cash-s.debts, B=oth, C=prim;
+  var pool=A+(o.countOther?B:0)+(o.homeMode==="sell"?C:0);
+  var curPool=pool, curHome=(o.homeMode==="last"?C:0);
+  var firstSpend=o.expToday*Math.pow(1+o.infl,R);
+  var maxY=(o.age!==null)? Math.max(1,100-(o.age+R)) : 60;
+  var rows=[], duration=null, homeStartY=null;
+  for(var y=0;y<maxY;y++){
+    var t=R+y;
+    var spend=o.expToday*Math.pow(1+o.infl,t);
+    var ssInc=(o.ssMonthly>0 && t>=o.ssStartT)? o.ssMonthly*12*Math.pow(1+o.cola,t) : 0;
+    var otherInc=(o.otherMonthly>0 && t>=o.otherStartT)? o.otherMonthly*12*Math.pow(1+o.infl,t) : 0;
+    var net=spend-ssInc-otherInc;
+    var start=curPool, avail=curPool*(1+o.postR), growth=avail-curPool, homeUsed=0, partial=false;
+    if(avail>=net){
+      curPool=avail-net;
+      if(curHome>0) curHome=curHome*(1+s.apprec);
+    } else {
+      var shortfall=net-avail;
+      if(o.homeMode==="last" && curHome>0){
+        var homeAvail=curHome*(1+s.apprec);
+        if(homeStartY===null) homeStartY=y;
+        if(homeAvail>=shortfall){
+          homeUsed=shortfall; curHome=homeAvail-shortfall; curPool=0;
+        } else {
+          homeUsed=homeAvail;
+          var frac=net>0? Math.max(0,Math.min(1,(avail+homeAvail)/net)) : 1;
+          duration=y+frac; curPool=0; curHome=0; partial=true;
+        }
+      } else {
+        var frac2=net>0? Math.max(0,Math.min(1,avail/net)) : 1;
+        duration=y+frac2; curPool=0; partial=true;
+      }
+    }
+    rows.push({y:y,t:t,age:(o.age!==null? o.age+t : null),start:start,growth:growth,ss:ssInc,other:otherInc,spend:spend,net:net,end:curPool,home:curHome,homeUsed:homeUsed});
+    series.push({t:t+1,pool:curPool,home:curHome});
+    if(partial) break;
+    if(curPool<=0 && curHome<=0){ duration=y+1; break; }
+  }
+  return {A:A,B:B,C:C,poolAtRet:pool,firstSpend:firstSpend,duration:duration,rows:rows,series:series,homeStartY:homeStartY,maxY:maxY};
+}
+function selectRetireYears(n){
+  if(isNaN(n)) return;
+  n=Math.max(0,Math.min(30,n));
+  $("retYears").value=n;
+  $("retYearsLabel").textContent=n+(n===1?" year":" years");
+  if(typeof renderRetirement==="function") renderRetirement();
+}
+document.addEventListener("pointerdown",function(e){
+  if(e.pointerType && e.pointerType!=="mouse") return;
+  var pr=e.target && e.target.closest? e.target.closest("tr.retpickrow") : null;
+  if(pr) selectRetireYears(parseInt(pr.dataset.retpick,10));
+});
+document.addEventListener("keydown",function(e){
+  if((e.key==="Enter"||e.key===" ") && e.target && e.target.classList && e.target.classList.contains("retpickrow")){
+    e.preventDefault();
+    selectRetireYears(parseInt(e.target.dataset.retpick,10));
+  }
+});
+function renderRetirement(s){
+  if(!s) s=readState();
+  var has=(s.assets>0||s.liab>0||s.income>0);
+  $("retExpFromTab1").textContent=fmt(s.expenses);
+  $("retPreReturnNote").textContent=(Math.round(s.r*1000)/10)+"%";
+  if(!has){
+    $("retVerdict").innerHTML='<span class="empty">Enter your numbers in Tab 1 (or load the sample), then set your retirement here.</span>';
+    $("retChart").innerHTML="";
+    return;
+  }
+  var o=buildRetOpts(s);
+  /* home card */
+  if(s.hasPrimary){
+    $("retHomeSummary").innerHTML="Primary home: <b>"+esc(s.primaryName)+"</b> · equity today <b class='mono'>"+fmt(s.primaryEq)+"</b> · its mortgage stays with it — both sides are set aside together when the home is excluded.";
+    $("retNoPrimaryNote").classList.add("hidden");
+  } else {
+    $("retHomeSummary").textContent="No primary home marked — all property equity is treated as other property below.";
+    $("retNoPrimaryNote").classList.toggle("hidden", s.propEq===0);
+  }
+  $("retHomeNote").textContent = o.homeMode==="keep"
+    ? "Your home is excluded. The answer below is how long your money lasts while you keep living in it."
+    : (o.homeMode==="last"
+      ? "Your home counts only after your other money runs out. Until then its equity grows at your property-appreciation assumption, not the market return — and the chart shades that final stretch gold."
+      : "Your home's equity joins the pool on retirement day (as if you sell or downsize then) and afterwards grows at your post-retirement return.");
+  /* SS display */
+  if(retSSMode==="est"){
+    $("retSSYearsWrap").classList.remove("hidden"); $("retSSManualWrap").classList.add("hidden");
+    $("retSSEst").textContent="~"+fmt(o.est.monthly)+"/mo at "+o.claimAge;
+    $("retSSDetail").textContent="Estimate: "+o.est.counted+" counted earning years (of 35) at capped earnings of "+fmt(o.est.capped)+"/yr give an AIME of "+fmt(o.est.aime)+"/mo and a full-benefit (age 67) amount of "+fmt(o.est.pia)+"/mo; claiming at "+o.claimAge+" pays "+Math.round(o.est.factor*100)+"% of that. 2026 SSA bend points ($1,286 / $7,749) and wage base ($184,500), full retirement age 67 — a ballpark, not your SSA figure."+(o.spouse>0? " Plus spouse "+fmt(o.spouse)+"/mo, starting the same year.":"");
+  } else if(retSSMode==="manual"){
+    $("retSSYearsWrap").classList.add("hidden"); $("retSSManualWrap").classList.remove("hidden");
+    $("retSSEst").textContent=o.ssOwnMonthly>0? fmt(o.ssOwnMonthly)+"/mo at "+o.claimAge : "— enter your benefit";
+    $("retSSDetail").textContent="Using your figure, in today's dollars, starting at age "+o.claimAge+" and rising at your COLA assumption."+(o.spouse>0? " Plus spouse "+fmt(o.spouse)+"/mo, starting the same year.":"");
+  } else {
+    $("retSSYearsWrap").classList.add("hidden"); $("retSSManualWrap").classList.add("hidden");
+    $("retSSEst").textContent="$0 — not counted";
+    $("retSSDetail").textContent="Social Security is left out of this run entirely — every year of spending comes out of the pool.";
+  }
+  var run=computeRetirement(s,o);
+  var thisYear=new Date().getFullYear();
+  /* age-at-top summary: what the age drives */
+  if(o.age!==null){
+    var ssStartYr=thisYear+o.ssStartT;
+    $("retAgeSummary").innerHTML="Age <b>"+o.age+"</b> → you retire in <b>"+(thisYear+o.R)+"</b> at <b>"+(o.age+o.R)+"</b>. Social Security at claiming age "+o.claimAge+" starts in <b>"+ssStartYr+"</b>"+(o.ssStartT===0? " (already at claiming age)" : " ("+o.ssStartT+(o.ssStartT===1?" year":" years")+" from now)")+" — every year before that is a bridge year with no benefit.";
+  } else {
+    $("retAgeSummary").innerHTML="No age entered — “runs out” is shown in years only, and <b>Social Security is assumed to start the year you retire</b> rather than at a claiming age. Enter your age to pin it properly.";
+  }
+  /* footnote: what "Income in" is made of */
+  var incParts=[];
+  if(o.ssMonthly>0){
+    var ssSrc=retSSMode==="est"? "estimated Social Security of "+fmt(o.ssOwnMonthly)+"/mo in today's dollars" : retSSMode==="manual"? "your Social Security of "+fmt(o.ssOwnMonthly)+"/mo in today's dollars" : "";
+    if(o.spouse>0) ssSrc+=" (plus spouse "+fmt(o.spouse)+"/mo)";
+    incParts.push(ssSrc+" starting in "+(thisYear+o.ssStartT)+(o.age===null? " — assumed to start at retirement because no age is entered above; enter your age to start it at your claiming age ("+o.claimAge+") instead" : " (claiming age "+o.claimAge+")")+", rising at your "+(Math.round(o.cola*1000)/10)+"% COLA");
+  }
+  if(o.otherMonthly>0) incParts.push("other income of "+fmt(o.otherMonthly)+"/mo in today's dollars starting in "+(thisYear+o.otherStartT)+", rising with inflation");
+  $("retIncomeNote").innerHTML = incParts.length
+    ? "<b>What “Income in” is:</b> "+incParts.join("; ")+". It offsets that year's spending, so the pool only funds the difference."
+    : "<b>What “Income in” is:</b> $0 in every year of this run — no Social Security or other income is being counted (see §4–§5 to add some). Every year of spending comes straight out of the pool.";
+  /* buckets */
+  function bucketTxt(today,atRet){ return fmt(today)+"<small>today · "+fmt(atRet)+" at retirement</small>"; }
+  $("retBucketA").innerHTML=bucketTxt(s.invested+s.otherAssets+s.cash-s.debts, run.A);
+  $("retBucketB").innerHTML=bucketTxt(s.otherPropEq, run.B);
+  $("retBucketC").innerHTML=bucketTxt(s.primaryEq, run.C);
+  /* stats */
+  $("retPoolAtRet").textContent=fmt(run.poolAtRet);
+  $("retPoolSub").textContent="Liquid "+fmt(run.A)+(o.countOther? " + other property "+fmt(run.B):"")+(o.homeMode==="sell"? " + home "+fmt(run.C):"")+" · total net worth then "+fmt(run.A+run.B+run.C);
+  $("retSpendStat").textContent=fmt(run.firstSpend);
+  $("retSpendSub").textContent="in "+(thisYear+o.R)+", in that year's dollars — your "+fmt(o.expToday)+" today, inflated at "+(Math.round(o.infl*1000)/10)+"%/yr";
+  $("retFirstYearSpend").textContent=fmt(run.firstSpend);
+  if(run.duration===null){
+    $("retRunsOut").textContent=o.age!==null? "Age 100+" : "60+ yrs";
+    $("retRunsOutSub").textContent="still funded at the horizon ("+(o.age!==null? "age 100":"60 years of retirement")+")";
+  } else {
+    var outAge=o.age!==null? Math.floor(o.age+o.R+run.duration) : null;
+    $("retRunsOut").textContent=outAge!==null? "Age ~"+outAge : fmtYears(run.duration);
+    $("retRunsOutSub").textContent="around "+Math.floor(thisYear+o.R+run.duration)+" · "+fmtYears(run.duration)+" into retirement";
+  }
+  /* verdict */
+  var retirePhrase=o.R===0? "Retire today" : "Retire in "+o.R+(o.R===1?" year":" years");
+  if(o.age!==null) retirePhrase+=" at "+(o.age+o.R);
+  var homePhrase = o.homeMode==="keep" ? ' — <span class="good">without touching your home</span>.'
+    : o.homeMode==="last" ? ' — with the final stretch funded by <span class="good">your home equity</span> (last resort).'
+    : ' — <span class="good">including selling your home</span> when you retire.';
+  var verdict;
+  if(run.duration===null){
+    verdict=retirePhrase+", and your money is <span class='good'>still going "+(o.age!==null? "at age 100":"after 60 years of retirement")+"</span>"+homePhrase;
+  } else {
+    verdict=retirePhrase+", and your money lasts about <span class='good'>"+fmtYears(run.duration)+"</span>"+(o.age!==null? " — until roughly <span class='good'>age "+Math.floor(o.age+o.R+run.duration)+"</span> ("+Math.floor(thisYear+o.R+run.duration)+")" : " — until about "+Math.floor(thisYear+o.R+run.duration))+homePhrase;
+  }
+  if(o.ssMonthly>0){
+    var oNoSS=Object.assign({},o,{ssMonthly:0});
+    var runNoSS=computeRetirement(s,oNoSS);
+    if(runNoSS.duration!==null && run.duration===null){
+      verdict+=" Social Security from "+o.claimAge+" is part of why it lasts.";
+    } else if(runNoSS.duration!==null && run.duration!==null){
+      var delta=run.duration-runNoSS.duration;
+      if(delta>=0.3) verdict+=" Social Security from "+o.claimAge+" adds about "+fmtYears(delta)+".";
+    }
+    if(o.age===null) verdict+=" (Add your age to pin Social Security's start to your claiming age — without it, it's assumed to start when you retire.)";
+  }
+  $("retVerdict").innerHTML=verdict;
+  /* SS coverage */
+  var firstSSRow=null;
+  for(var ri=0;ri<run.rows.length;ri++){ if(run.rows[ri].ss>0){ firstSSRow=run.rows[ri]; break; } }
+  if(o.ssMonthly>0 && firstSSRow){
+    var pct=Math.round(firstSSRow.ss/Math.max(firstSSRow.spend,1)*100);
+    $("retSSCover").innerHTML="<b>Social Security covers about "+pct+"% of your spending</b> in its first year ("+(thisYear+firstSSRow.t)+"): "+fmt(firstSSRow.ss)+"/yr against "+fmt(firstSSRow.spend)+"/yr of spending. The rest comes out of the pool.";
+  } else if(o.ssMonthly>0){
+    $("retSSCover").textContent="Social Security starts after this plan's money runs out, so it never gets to offset any spending in this run.";
+  } else {
+    $("retSSCover").textContent="";
+  }
+  /* comparison — fixed selectable dates, plus the current pick if it isn't one of them */
+  var cand=[5,10,15,20,25];
+  if(cand.indexOf(o.R)<0){ cand.push(o.R); cand.sort(function(a,b){return a-b;}); }
+  var ch='<table class="odds"><thead><tr><th>Retire in</th><th>Pool then</th><th>Lasts</th><th>Runs out</th></tr></thead><tbody>';
+  cand.forEach(function(cr){
+    var oo=Object.assign({},o,{R:cr});
+    if(!oo.otherStartGiven) oo.otherStartT=cr;
+    var rr=computeRetirement(s,oo);
+    var outTxt=rr.duration===null? (o.age!==null? "age 100+" : "60+ yrs") : (o.age!==null? "age ~"+Math.floor(o.age+cr+rr.duration)+" \u00b7 "+Math.floor(thisYear+cr+rr.duration) : Math.floor(thisYear+cr+rr.duration));
+    ch+="<tr class='retpickrow' tabindex='0' role='button' data-retpick='"+cr+"' title='Load retire in "+cr+" years into the whole tab'"+(cr===o.R? " style='background:var(--accent-soft)'":"")+"><td><b>"+cr+(cr===1?" yr":" yrs")+"</b>"+(cr===o.R? " \u00b7 selected":"")+"</td><td class='mono'>"+fmt(rr.poolAtRet)+"</td><td class='mono'>"+(rr.duration===null? "\u2014" : fmtYears(rr.duration))+"</td><td class='mono'>"+outTxt+"</td></tr>";
+  });
+  ch+="</tbody></table>";
+  if(retCompareHTML!==ch){ retCompareHTML=ch; $("retCompare").innerHTML=ch; }
+  /* year table */
+  var yh='<table class="odds"><thead><tr><th>Year</th><th>Age</th><th>Start</th><th>Growth</th><th>Income in</th><th>Spending</th><th>Left</th></tr></thead><tbody>';
+  run.rows.slice(0,80).forEach(function(rw){
+    yh+="<tr><td><b>"+(thisYear+rw.t)+"</b>"+(rw.homeUsed>0? " <span class='homeflag'>home tapped</span>":"")+"</td><td class='mono'>"+(rw.age!==null? rw.age:"—")+"</td><td class='mono'>"+fmt(rw.start)+"</td><td class='mono'>"+fmt(rw.growth)+"</td><td class='mono'>"+fmt(rw.ss+rw.other)+"</td><td class='mono'>"+fmt(rw.spend)+"</td><td class='mono'>"+fmt(rw.end)+"</td></tr>";
+  });
+  yh+="</tbody></table>";
+  if(retYearHTML!==yh){ retYearHTML=yh; $("retYearTable").innerHTML=yh; }
+  drawRetChart(run,o,s);
+}
+function drawRetChart(run,o,s){
+  var box=$("retChart");
+  var series=run.series;
+  var maxV=0, maxT=0;
+  series.forEach(function(pt){ maxV=Math.max(maxV,pt.pool+pt.home); maxT=Math.max(maxT,pt.t); });
+  if(maxV<=0||maxT<=0){ box.innerHTML='<p class="empty">The chart appears once there is a positive pool to draw down.</p>'; return; }
+  var thisYear=new Date().getFullYear();
+  var W=720,Hg=300,pl=14,pr=118,pt=16,pb=28;
+  var top=maxV*1.06;
+  function X(t){ return pl+(t/maxT)*(W-pl-pr); }
+  function Y(v){ return pt+(1-v/top)*(Hg-pt-pb); }
+  var svg='<svg viewBox="0 0 '+W+' '+Hg+'" role="img" aria-label="Retirement pool over time: growth while working, then drawdown">';
+  for(var gi=0;gi<=4;gi++){
+    var gv=top*gi/4;
+    svg+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" stroke="var(--line)"/>'
+      +'<text x="'+(pl+2)+'" y="'+(Y(gv)-4)+'" font-size="11" fill="var(--faint)" font-family="IBM Plex Mono,monospace">'+fmtShort(gv)+'</text>';
+  }
+  var step=maxT>30?10:5;
+  for(var xt=0;xt<=maxT;xt+=step){
+    var anch=xt===0?"start":(xt===maxT?"end":"middle");
+    svg+='<text x="'+X(xt)+'" y="'+(Hg-6)+'" font-size="11" fill="var(--faint)" text-anchor="'+anch+'">'+(thisYear+xt)+'</text>';
+  }
+  function pth(key){ return series.map(function(pt,i){ return (i?"L":"M")+X(pt.t).toFixed(1)+" "+Y(pt[key]).toFixed(1); }).join(" "); }
+  if(o.R>0 && o.R<maxT){
+    svg+='<line x1="'+X(o.R)+'" x2="'+X(o.R)+'" y1="'+pt+'" y2="'+(Hg-pb)+'" stroke="var(--faint)" stroke-dasharray="5 4"/>'
+      +'<text x="'+(X(o.R)+5)+'" y="'+(pt+10)+'" font-size="11.5" font-weight="700" fill="var(--muted)">you retire</text>';
+  }
+  if(o.ssMonthly>0 && o.ssStartT>0 && o.ssStartT<maxT){
+    svg+='<line x1="'+X(o.ssStartT)+'" x2="'+X(o.ssStartT)+'" y1="'+pt+'" y2="'+(Hg-pb)+'" stroke="var(--gold)" stroke-dasharray="2 4"/>'
+      +'<text x="'+(X(o.ssStartT)+5)+'" y="'+(Hg-pb-6)+'" font-size="11.5" font-weight="700" fill="var(--gold)">SS starts</text>';
+  }
+  var showHome=o.homeMode==="last" && series.some(function(pt){return pt.home>0;});
+  if(showHome) svg+='<path d="'+pth("home")+'" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-dasharray="7 4"/>';
+  svg+='<path d="'+pth("pool")+'" fill="none" stroke="var(--accent)" stroke-width="3"/>';
+  var lastPt=series[series.length-1];
+  svg+='<text x="'+(W-pr+8)+'" y="'+(Y(run.poolAtRet)+4)+'" font-size="12.5" font-weight="800" fill="var(--accent)">pool at retirement '+fmtShort(run.poolAtRet)+'</text>';
+  if(showHome) svg+='<text x="'+(W-pr+8)+'" y="'+(Y(run.C)+18)+'" font-size="12" font-weight="700" fill="var(--gold)">home '+fmtShort(run.C)+'</text>';
+  if(run.duration!==null) svg+='<text x="'+(W-pr+8)+'" y="'+(Y(0)-6)+'" font-size="12" font-weight="700" fill="var(--neg)">runs out ~'+Math.floor(thisYear+o.R+run.duration)+'</text>';
+  svg+="</svg>";
+  box.innerHTML=svg;
+}
+
+
+recalc();
+</script>
+  </body>
+</html>
